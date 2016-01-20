@@ -1,0 +1,24 @@
+
+{
+    "random_language" : {
+        "title" : "Random Language Determination Table",
+        "table" : [
+            { "i" : 1, "lang" : "Brownies" },
+            { "i" : 3, "lang" : "Bugbear" },
+            { "i" : 3, "lang" : "Centaur" },
+            { "i" : 3, "lang" : "Dragon, Black" },
+            { "i" : 3, "lang" : "Dragon, Blue" },
+            { "i" : 3, "lang" : "Dragon, Brass" },
+            { "i" : 3, "lang" : "Dragon, Bronze" },
+            { "i" : 3, "lang" : "Dragon, Copper" },
+            { "i" : 3, "lang" : "Dragon, Gold" },
+            { "i" : 3, "lang" : "Dragon, Green" },
+            { "i" : 3, "lang" : "Dragon, Red" },
+            { "i" : 3, "lang" : "Dragon, Silver" },
+            { "i" : 3, "lang" : "Dragon, White" },
+            { "i" : 3, "lang" : "Dryad" },
+            { "i" : 3, "lang" : "Dryad" },
+            { "i" : 3, "lang" : "Dryad" },
+            { "i" : 3, "lang" : "Dryad" },
+            { "i" : 3, "lang" : "Dryad" },
+            { "i" : 3, "lang" : "Dryad" },

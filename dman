@@ -32,7 +32,7 @@ default_character = {   'attribs':{},
                         'adventure_log': [],
                         'SHD' : '1d6'
                     }
-datadir = os.environ['HOME'] + '/.fecm'
+datadir = os.environ['HOME'] + '/.dndman'
 roster = []
 DEBUG = True
 config = {}
@@ -55,7 +55,7 @@ Options are:
  (L) List Characters
  (E) Edit a Character
  (C) Create a New Character
- (S) Take Character to the Shop
+ (S) go Shopping
  (G) Randomly Generate Character
  (D) Delete a Character
  (R) Configure Roll Methods
@@ -94,6 +94,15 @@ def list_dir(d):
                 _ld(os.path.join(d,x), files)
     _ld(d,files)
     return sorted(files)
+
+def character_for_name( name ):
+    for r in roster:
+        if r.data['name'] == name:
+            return r
+    return False
+
+def total_gp( money ):
+    pass
 
 class RandomDiceRoller:
     def dn(s, n):
@@ -167,6 +176,9 @@ def short_attrib( attribs ):
 class CharacterSheet:
     def __init__( self, blob = False ):
         self.data = blob if blob is not False else default_character
+
+    def __getitem__( self, index ):
+        return self.data[ index ]
 
     def save( self ):
         # write to disk
@@ -476,7 +488,7 @@ def autogen_character():
     char.data['name'] = input( "Enter the character name: " )
     return char
 
-def phb_store_basic():
+def goto_the_store():
     """- Who will enter the store?
         - $name has x.xx gp
         - what category would you like to peruse?
@@ -484,7 +496,12 @@ def phb_store_basic():
             - Shopkeeper has these for sale.
             - What would you like to buy?
                 """
-    pass
+    name = SubMenu( sorted([r.data['name'] for r in roster]) , "Who will enter the store?" )
+    char = character_for_name( name ) 
+    if not char:
+        print( 'couldn\'t find {}'.format(name) )
+        return
+    print( '"{}" has {} gp', char['name'], 
 
 def delete_character_menu():
     global roster
@@ -589,7 +606,7 @@ while op != 'q' and op != 'Q':
             char.print()
 
     elif op.upper() == 'S':
-        phb_store_basic()
+        goto_the_store()
 
     elif op == 'G' or op == 'g':                    # generate
         print( 'Generating a Player Character' )
@@ -613,77 +630,3 @@ while op != 'q' and op != 'Q':
 
 print( 'goodbye' )
 
-
-
-
-
-
-"""
-CHAR CREATION (manual)
-1 - roll 6 abilities
-    - keep? y/n
-2 - select name
-3 - select Race
-  - note race ability/penality bonuses
-4 - select Sex
-  - write down attribute abilities and penalties
-5 - note saving throws
-6 - roll hit dice
-      d4 - Monk, Magic User, Illusionist
-      d6 - Thief, Assassin
-      d8 - Cleric, Druid, Ranger
-      d10 - Fighter, Paladin
-
-7 - select Alignment
-8 - Family background
-9 - next of kin for leaving equip to if die while adventuring
-10 - city where currently located
-11 - select Class
-12 - note class modifiers
-13 - Determine known languages
-14 - calculate starting money
-15 - roll and assign 2 secondary skills
-16 - roll character age
-17 - determine weapon proficiency (which weapons proficient with
-18 - spend money on gear and equip character
-19 - calculate armor class
-20 - calculate weight of all gear -> yields movement
-21 - determine spells known
-22 - note base movement
-23 - choose a god if cleric, or optionally, for other classes
-24 - height & weight
-25 - determine unarmed combat modifiers
-26 - notes
-
-----------------
-FEATURES
-- once a character is created we need:
-- a full featured interactive editor
-- inventory: two types:
-    - canonical (stuff listed in PHB and DMG)
-    - custom, which is just a text entry field,
-    - adds to global inventory list
-    - inventory items attach to character that owns them
-- command to cat out character, stats layout is important:
-    - main stats at top
-    - attribute modifiers
-    - race modifiers
-    - class modifiers
-    - cumulative "to-hit" and "damage" with modifiers
-    - saving throws, normal and with modifiers
-
-----------------
-programming classes:
-- rolling_chart, static list of stuff to be rolled against, ie, 'known languages'; ability to Roll() itself
-
-    eg. known_languages = new KnownLanguages()
-        lang = known_languages.Roll() # returns rolled/selected language
-    - stores the list of stuff, and the number rolled on
-    - stores the dice-rolling method
-    - uses random_dice class
-- random_dice class; random num generator, can computer all possible permutations of die-rolls
-
-- charater_sheet
-    - ability to read/write to json
-
-"""
