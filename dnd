@@ -22,6 +22,7 @@ default_character = {   'attribs':{},
                             'sp': 0,
                             'cp': 0,
                         },
+                        'inventory' : [],
 
                         'sex':'Male',
                         'height': '5 ft. 10 in.',
@@ -30,7 +31,7 @@ default_character = {   'attribs':{},
                         'home_town': 'Greyhawk',
                         'notes': '',
                         'adventure_log': [],
-                        'SHD' : '1d6'
+                        'SHD' : '1d6',
                     }
 datadir = os.environ['HOME'] + '/.dndman'
 roster = []
@@ -49,13 +50,14 @@ defconfig = """{
 # data sheets to load
 equipment = {}
 character = {}
+world = {}
 
 menu = """First Edition Dungeons & Dragons Character Management Tool.
 Options are:
  (L) List Characters
  (E) Edit a Character
  (C) Create a New Character
- (S) go Shopping
+ (S) Shop at the Store
  (G) Randomly Generate Character
  (D) Delete a Character
  (R) Configure Roll Methods
@@ -69,6 +71,60 @@ Your Selection> """
 def dprint( s ):
     if DEBUG is True:
         print( 'DEBUG: {}'.format(s) )
+
+# money helper methods
+def exchange( it, quantity, ot ):
+    io = world['exchange_rate'][it][ot]
+    return io * quantity
+
+def frac_gp( money, kind='gp' ):
+    tot = 0
+    for t in ('cp','sp','gp','ep','pp'):
+        if t in money:
+            tot = tot + exchange( t, money[t], kind )
+    return tot
+
+class Money:
+    def __init__(self, obj=False):
+        if obj:
+            self.money = obj
+        else
+            self.money = {}
+
+    def me_and_you(self, rhs):
+        me = frac_gp(self.money)
+        if type(rhs) is Money:
+            rhs = rhs.money
+        yu = frac_gp(rhs)
+        return me, yu
+
+    def __lt__(self, rhs):
+        me, yu = self.me_and_you( rhs )
+        return me < yu
+
+    def __gt__(self, rhs):
+        me, yu = self.me_and_you( rhs )
+        return me > yu
+
+    def __eq__(self, rhs):
+        me, yu = self.me_and_you( rhs )
+        return me == yu
+
+    def __le__(self, rhs):
+        me, yu = self.me_and_you( rhs )
+        return me <= yu
+
+    def __ge__(self, rhs):
+        me, yu = self.me_and_you( rhs )
+        return me >= yu
+
+    # a - b
+    def __sub__(self, rhs):
+        # break money into change?
+        pass
+
+
+
 
 def number_end( num ):
     if num > 10 and num < 20:
@@ -248,7 +304,7 @@ def load_roster():
             roster.append( CharacterSheet( json.load(f) ) )
 
 
-def SubMenu( options, header='', prompt='select>', random_noprompt=0 ):
+def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False ):
     """ takes a list,
         X prints a header
         X prints an arbitary length list of options
@@ -271,13 +327,15 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=0 ):
             print( ' {}: "{}"'.format(i, option) )
         print( '\n e] exit to previous menu' )
         print( ' q] quit to main menu' )
-        print( ' c] enter custom type' )
+        if custom:
+            print( ' c] enter custom type' )
 
         if prompt[-1] != ' ':
             prompt = '{} '.format(prompt)
 
         s = input( prompt )
-        if s == 'c':
+
+        if custom and s == 'c':
             while True:
                 txt = input( 'enter custom> ' )
                 if txt:
@@ -313,11 +371,11 @@ def manual_create_character():
     # NAME
     while True:
         ans = input( "What is your character's name? " )
-        hmm = yn( 'you typed: "{}", keep? '.format(ans) )
+        hmm = yn( 'Character\'s Name is: "{}", keep? '.format(ans) )
         if hmm:
             break
     char.data['name'] = ans
-    print( 'name is: "{}"'.format(d['name']), end='\n\n' )
+    print( 'Name: "{}"'.format(d['name']), end='\n\n' )
     time.sleep( sleep_time )
 
     # ATTRIBUTES
@@ -343,7 +401,7 @@ def manual_create_character():
 
     # RACE
     while True:
-        ans = SubMenu( list( character['races'].keys() ), "Select a race: " )
+        ans = SubMenu( list( character['races'].keys() ), "Select a race: ", custom=True )
         if ans is None:
             return False
         if ans is not False:
@@ -354,7 +412,7 @@ def manual_create_character():
 
     # SEX
     while True:
-        ans = SubMenu( ['Male', 'Female'], 'What Sex are They [Male or Female]?' )
+        ans = SubMenu( ['Male', 'Female'], 'What Sex are They [Male or Female]?', custom=True )
         if ans is None:
             return False
         if ans is not False:
@@ -365,7 +423,7 @@ def manual_create_character():
 
     # ALIGNMENT
     while True:
-        ans = SubMenu( character['alignments'], 'What Alignment are They? ' )
+        ans = SubMenu( character['alignments'], 'What Alignment are They? ', custom=True )
         if ans:
             break
         if ans is None:
@@ -376,7 +434,7 @@ def manual_create_character():
 
     # CLASS
     while True:
-        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'select a class' )
+        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'select a class', custom=True )
         if ans:
             break
         if ans is None:
@@ -436,13 +494,6 @@ def manual_create_character():
     print( 'character got {} gp'.format( d['gp'] ), end='\n\n' )
     time.sleep( sleep_time )
 
-    # BUY EQUIPMENT
-    # armor
-    while True:
-        for i, v in enumerate( sorted(equipment['armor']) ):
-            print( ' {}: {}'.format( i, v ) )
-        ans = yn( "this is the place I left off before I went to bed" )
-        break
 
     # WEAPON PROFICIENCIES
     #   choose N from equipment list, or write in
@@ -488,20 +539,41 @@ def autogen_character():
     char.data['name'] = input( "Enter the character name: " )
     return char
 
-def goto_the_store():
-    """- Who will enter the store?
-        - $name has x.xx gp
-        - what category would you like to peruse?
-            armor, weapons, misc items, ...
-            - Shopkeeper has these for sale.
-            - What would you like to buy?
-                """
-    name = SubMenu( sorted([r.data['name'] for r in roster]) , "Who will enter the store?" )
-    char = character_for_name( name ) 
-    if not char:
-        print( 'couldn\'t find {}'.format(name) )
-        return
-    print( '"{}" has {} gp', char['name'], 
+def shop_at_the_store():
+    while True:
+        name = SubMenu( sorted([r.data['name'] for r in roster]) , "Who will enter the store?", custom=False )
+        if not name:
+            return
+        char = character_for_name( name )
+        if not char:
+            print( 'couldn\'t find {}'.format(name) )
+            return
+
+        while True:
+            print( '{} has {} gp'.format( char['name'], frac_gp( char['money'] ) ) )
+            etype = SubMenu( sorted(equipment.keys()), 'What category would you like to peruse?', custom=False )
+            if etype is None:
+                return
+            elif etype is False:
+                break
+
+            while True:
+                item_name = SubMenu( equipment[etype], "Shopkeeper has these for sale. Which would you like to purchase?", custom=False )
+                if item_name:
+                    item = equipment[etype][item_name]
+                    amt, kind = item['cost'].split(' ')
+                    icost = Money({kind:amt})
+                    phave = Money(char['money'])
+                    if icost <= phave:
+
+                        char['money']
+                    char['inventory'].append(item)
+                    print( '\nYou bought a {}!\n'.format( item_name ) )
+                elif item_name is False:
+                    break
+                else:
+                    return
+
 
 def delete_character_menu():
     global roster
@@ -567,12 +639,20 @@ def configure_rolling_method():
             print( 'unknown selection' )
 
 def load_data():
+    fh = open( './data/phb_equipment.json', 'r' )
     global equipment
+    equipment = json.load( fh )
+    fh.close()
+
+    fh = open( './data/phb_character.json', 'r' )
     global character
-    with open( './data/phb_equipment.json', 'r' ) as f:
-        equipment = json.load( f )
-    with open( './data/phb_character.json', 'r' ) as f:
-        character = json.load( f )
+    character = json.load( fh )
+    fh.close()
+
+    fh = open( './data/phb_world.json', 'r' )
+    global world
+    world = json.load( fh )
+    fh.close()
 
 
 ##################################################################
@@ -606,7 +686,7 @@ while op != 'q' and op != 'Q':
             char.print()
 
     elif op.upper() == 'S':
-        goto_the_store()
+        shop_at_the_store()
 
     elif op == 'G' or op == 'g':                    # generate
         print( 'Generating a Player Character' )
