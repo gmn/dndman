@@ -1,0 +1,714 @@
+#!/usr/bin/env python3
+import json
+import random
+import os
+import time
+
+##################################################################
+# CONFIG, GLOBALS
+attribs_ordered = ('str','int','wis','dex','con','chr')
+default_character = {   'attribs':{},
+                        'name':'Default Name',
+                        'level':1,
+                        'race':'Human',
+                        'class': 'Fighter',
+                        'hp': 1,
+                        'HD': 'd6',
+                        'alignment': 'True Neutral',
+                        'money': {
+                            'pp': 0,
+                            'ep': 0,
+                            'gp': 100,
+                            'sp': 0,
+                            'cp': 0,
+                        },
+
+                        'sex':'Male',
+                        'height': '5 ft. 10 in.',
+                        'hair': 'brown',
+                        'age': 19,
+                        'home_town': 'Greyhawk',
+                        'notes': '',
+                        'adventure_log': [],
+                        'SHD' : '1d6'
+                    }
+datadir = os.environ['HOME'] + '/.fecm'
+roster = []
+DEBUG = True
+config = {}
+sleep_time = 0.45
+defconfig = """{
+    "rolls" : [
+        "3d6",
+        "1d12 + 6"
+    ],
+    "default_attrib_roll_method" : 1,
+    "class_names": {
+        "Cleric": [ "Acolyte", "Adept", "Priest", "Curate", "Curate", "Canon", "Lama", "Patriarch", "High Priest" ],
+        "Druid": [ "Aspirant", "Ovate", "Initiate of the 1st Circle", "Initiate of the 2nd Circle", "Initiate of the 3rd Circle", "Initiate of the 4th Circle", "Initiate of the 5th Circle", "Initiate of the 6th Circle", "Initiate of the 7th Circle", "Initiate of the 8th Circle", "Initiate of the 9th Circle", "Druid", "Archdruid", "The Great Druid" ],
+        "Fighter": [ "Veteran", "Warrior", "Swordsman", "Hero", "Swashbuckler", "Myrmidon", "Champion", "Superhero", "Lord" ],
+        "Paladin": [ "Gallant", "Keeper", "Protector", "Defender", "Warder", "Guardian", "Chevalier", "Justiciar", "Paladin" ],
+        "Ranger": [ "Runner", "Strider", "Scout", "Courser", "Tracker", "Guide", "Pathfinder", "Ranger", "Ranger Lord" ],
+        "Magic User": [ "Prestidigitator", "Evoker", "Conjurer", "Theurgist", "Thaumaturgist", "Magician", "Enchanter", "Warlock", "Sorcerer", "Necromancer", "Wizard", "Wizard (12th Level)", "Wizard (13th Level)", "Wizard (14th Level)", "Wizard (15th Level)", "Mage (Wizard 16th Level)", "Wizard (17th Level)", "Arch-Mage" ],
+        "Illusionist": [ "Prestidigitator", "Minor Trickster", "Trickster", "Master Trickster", "Cabalist", "Visionist", "Phantasmist", "Apparitionist", "Spellbinder", "Illusionist" ],
+        "Thief": [ "Rogue (Apprentice)", "Footpad", "Cutpurse", "Robber", "Burglar", "Filcher", "Sharper", "Magsman", "Thief", "Master Thief" ],
+        "Assassin": [ "Bravo (Apprentice)", "Rutterkin", "Waghalter", "Murderer", "Thug", "Killer", "Cutthroat", "Executioner", "Assassin", "Expert Assassin", "Senior Assassin", "Chief Assassin", "Prime Assassin", "Guildmaster Assassin", "Grandfather of Assassins" ],
+        "Monk": [ "Novice", "Initiate", "Brother", "Disciple", "Immaculate", "Master", "Superior Master", "Master of Dragons", "Master of the North Wind", "Master of the West Wind", "Master of the South Wind", "Master of the East Wind", "Master of Winter", "Master of Autumn", "Master of Summer", "Master of Spring", "Grand Master of Flowers" ]
+    },
+    "races" : {
+        "Human" : { "pl": "Human" },
+        "Elf" : { "pl": "Elven" },
+        "Dwarf" : { "pl": "Dwarven" },
+        "Halfling" : { "pl": "Halfling" },
+        "Gnome": { "pl": "Gnomish" },
+        "Half-Elf": { "pl": "Half-Elven" },
+        "Half-Orc": { "pl": "Half-Orcish" }
+    },
+    "classes" : {
+        "Cleric" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-3,"l":4}, "money": "3d6 x 10" },
+        "Druid" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-4,"l":5}, "money": "3d6 x 10" },
+        "Fighter" : { "HD": "d10", "SHD": "1d10", "wp":{"in":4,"np":-2,"l":3}, "money": "5d4 x 10" },
+        "Paladin" : { "HD": "d10", "SHD": "1d10", "wp":{"in":3,"np":-2,"l":3}, "money": "5d4 x 10" },
+        "Ranger" : { "HD": "d8", "SHD": "2d8", "wp":{"in":3,"np":-2,"l":3}, "money": "5d4 x 10" },
+        "Magic User" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6}, "money": "2d4 x 10" },
+        "Illusionist" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6}, "money": "2d4 x 10" },
+        "Thief" : { "HD": "d6", "SHD": "1d6", "wp":{"in":2,"np":-3,"l":4}, "money": "2d6 x 10" },
+        "Assassin" : { "HD": "d6", "SHD": "1d6", "wp":{"in":3,"np":-2,"l":4}, "money": "2d6 x 10" },
+        "Monk" : { "HD": "d4", "SHD": "2d4", "wp":{"in":1,"np":-3,"l":2}, "money": "5d4 x 1" }
+    },
+    "alignments": [ "Lawful Good", "Lawful Neutral", "Lawful Evil", "Neutral Good", "True Neutral", "Neutral Evil", "Chaotic Good", "Chaotic Neutral", "Chaotic Evil" ],
+    "equipment": [
+    ]
+}
+"""
+
+menu = """First Edition Dungeons & Dragons Character Management Tool.
+Options are:
+ (L) List Characters
+ (E) Edit a Character
+ (C) Create a New Character
+ (S) Take Character to the Shop
+ (G) Randomly Generate Character
+ (D) Delete a Character
+ (R) Configure Roll Methods
+ (Q) Quit
+Your Selection> """
+
+
+
+##################################################################
+# METHODS & CLASSES
+def dprint( s ):
+    if DEBUG is True:
+        print( 'DEBUG: {}'.format(s) )
+
+def number_end( num ):
+    if num > 10 and num < 20:
+        return str(num) + 'th'
+    s = str(num)
+    o = str(num)[-1]
+    if o == '1':
+        return s + 'st'
+    elif o == '2':
+        return s + 'nd'
+    elif o == '3':
+        return s + 'rd'
+    else:
+        return s + 'th'
+
+def list_dir(d):
+    files=[]
+    def _ld(d,files):
+        if os.path.isfile(d):
+            files.append(d)
+        elif os.path.isdir(d):
+            for x in os.listdir(d):
+                _ld(os.path.join(d,x), files)
+    _ld(d,files)
+    return sorted(files)
+
+class RandomDice:
+    def dn(s, n):
+        return random.randint(1,n)
+    def d4(s):
+        return s.dn(4)
+    def d6(s):
+        return s.dn(6)
+    def d8(s):
+        return s.dn(8)
+    def d10(s):
+        return s.dn(10)
+    def d12(s):
+        return s.dn(12)
+    def d20(s):
+        return s.dn(20)
+    def d100(s):
+        return s.dn(100)
+    def xdx( self, idi ): # takes a string in the format <int>d<int>, eg. 3d6, 6d4,
+        nums = idi.split('d')
+        if not nums[0]:
+            nums[0] = 1
+        i = 0
+        t = 0
+        d = int(nums[1])
+        while i < int(nums[0]):
+            t = t + self.dn( d )
+            i = i + 1
+        return t
+
+    def roll( self, inp ): # computes string of N rolls of xdx joined by '+'. Can also do XDX + CONST
+        total = 0
+        rolls = inp.replace(' ','').split('+')
+        for roll in rolls:
+            val = self.xdx( roll ) if 'd' in roll else int(roll)
+            total = total + val
+        return total
+
+    def mult( self, inp ): # expects the form: "xdx x INT"
+        rolls = inp.replace(' ','').split('x')
+        total = self.xdx( rolls[0] )
+        total = total * int(rolls[1])
+        return total
+
+
+class RollingChart:
+    pass
+
+def getint( text ):
+    val = input( text )
+    return int( val )
+
+def yn( text ):
+    val = input( '{} [y/N]: '.format(text) )
+    return val == 'y' or val == 'Y'
+
+def fmt_attrib( attribs ):
+    s = ''
+    for a in attribs_ordered[:-1]:
+        s += '{}: {}, '.format( a, attribs[a] )
+    a = attribs_ordered[-1]
+    return s + '{}: {}'.format( a, attribs[a] )
+
+def short_attrib( attribs ):
+    s = ''
+    for a in attribs_ordered[:-1]:
+        s += '{}, '.format( attribs[a] )
+    a = attribs_ordered[-1]
+    return s + '{}'.format( attribs[a] )
+
+class CharacterSheet:
+    def __init__( self, blob = False ):
+        self.data = blob if blob is not False else default_character
+
+    def save( self ):
+        # write to disk
+        with open( datadir + '/characters/' + self.data['name'], 'w' ) as f:
+            f.write( json.dumps( self.data, indent = 2 ) )
+        # update roster
+        global roster
+        for c in roster:
+            if c.data['name'] == self.data['name']:
+                c.data = self.data
+                return
+        roster.append( self )
+
+    def load( self ):
+        pass
+
+    def LevelName( self ):
+        class_names = config['class_names']
+        if self.data['class'] in class_names:
+            if self.data['level'] >= len( class_names[ self.data['class'] ] ):
+                return class_names[ self.data['class'] ][-1] + '(' + number_end( self.data['level'] ) + ' Level)'
+            else:
+                return class_names[ self.data['class'] ][ self.data['level'] - 1 ]
+        return self.data.get( 'custom_class_name', 'Unknown Character' )
+
+    def fmt_attrib( self ):
+        return fmt_attrib( self.data['attribs'] )
+
+    def short_attrib( self ):
+        return short_attrib( self.data['attribs'] )
+
+    def print( self ):
+        race = self.data['race']
+        if race in config['races']:
+            race = config['races'][ race ]['pl']
+        print( self.toString() )
+
+    def toString( self ):
+        race = self.data['race']
+        if race in config['races']:
+            race = config['races'][ race ]['pl']
+        # Barney the Prestidigitator, Lv 1 Fighter: 16 14 13 12 16 12, ( 144 gp )
+        return '"{}" the {}, Lv {} {} {}: {}'.format( self.data['name'], self.LevelName(), self.data['level'], race, self.data['class'], self.short_attrib() )
+
+def ensure_datadir():
+    if not os.path.exists(datadir):
+        os.mkdir( datadir )
+    if not os.path.exists(datadir+'/characters'):
+        os.mkdir( datadir+'/characters' )
+    if not os.path.exists( datadir + '/config' ):
+        with open( datadir + '/config', 'w' ) as f:
+            f.write( defconfig )
+
+def read_config():
+    global config
+    with open( datadir + '/config', 'r' ) as f:
+        config = json.loads(f.read())
+
+def write_config():
+    with open( datadir + '/config', 'w' ) as f:
+        f.write( json.dumps( config, indent=2 ) )
+
+def load_roster():
+    global roster
+    character_filepaths = list_dir( datadir + '/characters' )
+    for path in character_filepaths:
+        with open( path, 'r' ) as f:
+            roster.append( CharacterSheet( json.load(f) ) )
+
+
+def SubMenu( options, header='', prompt='select>', random_noprompt=0 ):
+    """ takes a list,
+        X prints a header
+        X prints an arbitary length list of options
+        - handles console window height run-overs
+        X adds on: e) exit menu, q) quit to main, c) custom input
+        X print a 'prompt> '
+        X gets input, checks for int or option, loops until exit-condition is met,
+            returns a string
+        - enums, so the caller knows if it is supposed to return
+        - handles different behaviors, so that all the character class
+            eventualities are handled
+        - takes 'random=1', so that prompt is skipped and random number
+            is selected
+        - can be reused in CREATOR, EDITOR, AUTO-GENERATOR
+    """
+    while True:
+        if header:
+            print( header )
+        for i, option in enumerate(options):
+            print( ' {}: "{}"'.format(i, option) )
+        print( '\n e] exit to previous menu' )
+        print( ' q] quit to main menu' )
+        print( ' c] enter custom type' )
+
+        if prompt[-1] != ' ':
+            prompt = '{} '.format(prompt)
+
+        s = input( prompt )
+        if s == 'c':
+            while True:
+                txt = input( 'enter custom> ' )
+                if txt:
+                    if txt == 'e':
+                        return False
+                    elif txt == 'q':
+                        return None
+                    return txt
+
+        if s == 'e':
+            return False
+        elif s == 'q':
+            return None
+        else:
+            try:
+                iv = int(s)
+            except:
+                print( 'invalid selection' )
+                continue
+            if iv < 0 and iv >= len(races):
+                print( 'invalid selection' )
+                continue
+            return options[ iv ]
+
+
+def manual_create_character():
+    """This is the primary interface that allows a player to roll, generate, or manually enter in a character"""
+    char = CharacterSheet()
+    attribs = char.data['attribs']
+    d = char.data
+    dice = RandomDice()
+
+    # NAME
+    while True:
+        ans = input( "What is your character's name? " )
+        hmm = yn( 'you typed: "{}", keep? '.format(ans) )
+        if hmm:
+            break
+    char.data['name'] = ans
+    print( 'name is: "{}"'.format(d['name']), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # ATTRIBUTES
+    auto_roll = yn( 'Would you like your attributes to be rolled for you?' )
+    if not auto_roll:
+        while True:
+            print( "Enter Attributes Manually:" )
+            for a in attribs_ordered:
+                attribs[a] = getint( "Enter {}: ".format(a) )
+            if yn( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ) ):
+                break
+    else:
+        roll_method = config['rolls'][ config['default_attrib_roll_method'] ]
+        while True:
+            print( 'Rolling automatically using dice method: "{}"'.format( roll_method ) )
+            for a in attribs_ordered:
+                attribs[a] = dice.roll( roll_method )
+            print( 'rolled: {}'.format( fmt_attrib( attribs ) ) )
+            if yn( 'keep?' ):
+                break
+    print( 'Using attributes: {}'.format( fmt_attrib( attribs ) ) )
+    time.sleep( sleep_time )
+
+    # RACE
+    while True:
+        ans = SubMenu( list( config['races'].keys() ), "Select a race: " )
+        if ans is None:
+            return False
+        if ans is not False:
+            break
+    d['race'] = ans
+    print( 'selected: "{}"'.format( d['race'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # SEX
+    while True:
+        ans = SubMenu( ['Male', 'Female'], 'What Sex are They [Male or Female]?' )
+        if ans is None:
+            return False
+        if ans is not False:
+            break
+    d['sex'] = ans
+    print( 'got sex: "{}"'.format( d['sex'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # ALIGNMENT
+    while True:
+        ans = SubMenu( config['alignments'], 'What Alignment are They? ' )
+        if ans:
+            break
+        if ans is None:
+            return False
+    d['alignment'] = ans
+    print( 'got alignment: "{}"'.format( d['alignment'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # CLASS
+    while True:
+        ans = SubMenu( sorted( list( config['classes'].keys() ) ), 'select a class' )
+        if ans:
+            break
+        if ans is None:
+            return False
+    d['class'] = ans
+    print( 'got class: "{}"'.format( d['class'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # ENTER LEVEL
+    ans = input( 'what level are you (default: 1)> ' )
+    if ans:
+        d['level'] = int(ans)
+    print( 'got "{}" level'.format( number_end( d['level'] ) ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # DETERMINE HIT_DICE
+    if d['class'] in config['classes']:
+        d['HD'] = config['classes'][ d['class'] ]['HD']
+        d['SHD'] = config['classes'][ d['class'] ]['SHD']
+    else:
+        d['HD'] = d['SHD'] = input( 'enter hit-dice for custom class (eg. d6, d10, 2d4)> ' )
+
+    # HIT POINTS (roll hit dice)
+    print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
+    manual_enter_hp = not yn( 'Would you like your hit-points to be rolled for you?' )
+    if manual_enter_hp:
+        hp = getint( 'enter hitpoints rolled> ' )
+    else:
+        while True:
+            hp = []
+            hp.append( dice.roll( d['SHD'] ) )
+            i = 1
+            while i < d['level']:
+                hp.append( dice.roll( d['HD'] ) )
+                i = i + 1
+            print( 'rolled: ', end='' )
+            for h in hp[:-1]:
+                print( str(h) + ' +', end=' ' )
+            print( '{} = {}'.format( str(hp[-1]), sum(hp) ) )
+            if yn( 'keep? ' ):
+                d['hp'] = sum(hp)
+                break
+    print( 'character has {} hit points'.format( d['hp'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # AGE
+    d['age'] = getint( 'How old is {}? '.format(d['name']) )
+
+    # STARTING MONEY
+    ca = config['classes'][ d['class'] ]
+    while True:
+        print( 'Class: {} starts with "{} gp"'.format( d['class'], ca['money'] ) )
+        gp = dice.mult( ca['money'] )
+        if yn( ' rolled {} gp, keep? '.format( gp ) ):
+            d['gp'] = gp
+            break
+    print( 'character got {} gp'.format( d['gp'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
+    # BUY EQUIPMENT
+    with open( './phb_equipment.json', 'r' ) as f:
+        stuff = json.load( f )
+    # armor
+    while True:
+        for i, v in enumerate( sorted(stuff['armor']) ):
+            print( ' {}: {}'.format( i, v ) )
+        ans = yn( "this is the place I left off before I went to bed" )
+        break
+
+
+    # WEAPON PROFICIENCIES
+
+    # EQUIP CHARACTER
+
+    # ARMOR CLASS
+
+    # GEAR WEIGHT
+
+    # KNOWN SPELLS
+
+    # BASE MOVEMENT RATE
+
+    # SELECT GOD
+
+    # HEIGHT
+
+    # WEIGHT
+
+    # determine known languages
+    # calculate starting money
+    # 2 secondary skills
+
+    # note race modifiers
+    # note saving throws
+    # note class modifiers
+    # note proficiency modifiers
+
+    # family background
+    # next of kin
+    # home city
+    return char
+
+
+def autogen_character():
+    """this creates an entire character, completely randomly, including name"""
+    char = CharacterSheet()
+    attribs = char.data['attribs']
+    dice = RandomDice()
+    for a in attribs_ordered:
+        attribs[a] = dice.roll( config['rolls'][ config['default_attrib_roll_method'] ] )
+    char.data['name'] = input( "Enter the character name: " )
+    return char
+
+def phb_store_basic():
+    """- Who will enter the store?
+        - $name has x.xx gp
+        - what category would you like to peruse?
+            armor, weapons, misc items, ...
+            - Shopkeeper has these for sale.
+            - What would you like to buy?
+                """
+    pass
+
+def delete_character_menu():
+    global roster
+    print('')
+    def print_names():
+        print('Pick a character to DELETE:')
+        for i, character in enumerate(roster):
+            print( ' {}: "{}"'.format( i, character.toString() ) )
+        print( '\n e] exit back to main menu' )
+    while True:
+        if len(roster) == 0:
+            print( 'Character roster empty' )
+            break
+        print_names()
+        inp = input( 'select> ' )
+        if inp == 'e':
+            break
+        try:
+            ival = int(inp)
+        except:
+            print( 'bad option, not integer' )
+            continue
+        hmm = yn( 'delete character "{}", are you sure?'.format(roster[ival].data['name']) )
+        if not hmm:
+            print( 'ok, not deleting. good choice' )
+            continue
+        name = roster[ival].data['name']
+        print( 'deleting "{}"...'.format(roster[ival].data['name']) )
+        roster = roster[:ival] + roster[ival+1:]
+        os.unlink( datadir + '/characters/' + name )
+
+def configure_rolling_method():
+    global config
+    def print_menu():
+        print( 'stored attribute rolling methods:' )
+        for i, r in enumerate(config['rolls']):
+            d = 'default' if i == config['default_attrib_roll_method'] else ''
+            print( " {}: '{}' {}".format( i, r, d ) )
+        print( '\n n] add a new method' )
+        print( ' d] delete a method' )
+        print( ' s] set default' )
+        print( ' e] exit to the main menu' )
+    while True:
+        if len(config['rolls']) == 0:
+            print( 'Warning: No stored roll method available. Could cause errors.' )
+            break
+        print_menu()
+        o = input( 'select> ' )
+        if o == 'e':
+            break
+        if o == 'n':
+            m = input( 'new roll method: ' )
+            config['rolls'].append(m)
+            write_config()
+        elif o == 'd':
+            i = getint( 'delete which roll method? ' )
+            config['rolls'] = config['rolls'][:i] + config['rolls'][i+1:]
+            write_config()
+        elif o == 's':
+            config['default_attrib_roll_method'] = getint( 'set which as default? ' )
+            write_config()
+        else:
+            print( 'unknown selection' )
+
+##################################################################
+#
+# entry point
+#
+##################################################################
+ensure_datadir()
+read_config()
+load_roster()
+
+op = ''
+while op != 'q' and op != 'Q':
+    op = input( menu )
+    if op == 'L' or op == 'l':                      # list
+        if len(roster) == 0:
+            print( 'no characters' )
+        for i, c in enumerate(roster):
+            print( '{}: '.format(i+1), end='' )
+            c.print()
+
+    elif op == 'E' or op == 'e':                    # edit
+        print( 'Not Implemented' )
+
+    elif op == 'C' or op == 'c':                    # create
+        print( 'Creating a Player Character' )
+        char = manual_create_character()
+        if char:
+            char.save()
+            char.print()
+
+    elif op.upper() == 'S':
+        phb_store_basic()
+
+    elif op == 'G' or op == 'g':                    # generate
+        print( 'Generating a Player Character' )
+        char = autogen_character()
+        char.print()
+        ans = yn( 'keep this character?' )
+        if ans:
+            char.save()
+
+
+    elif op == 'd' or op == 'D':                    # delete
+        delete_character_menu()
+
+    elif op == 'R' or op == 'r':                    # rolling method
+        configure_rolling_method()
+
+    elif op == 'Q' or op == 'q':                    # quit
+        break
+    else:
+        print( "Command Unknown" )
+
+print( 'goodbye' )
+
+
+
+
+
+
+"""
+CHAR CREATION (manual)
+1 - roll 6 abilities
+    - keep? y/n
+2 - select name
+3 - select Race
+  - note race ability/penality bonuses
+4 - select Sex
+  - write down attribute abilities and penalties
+5 - note saving throws
+6 - roll hit dice
+      d4 - Monk, Magic User, Illusionist
+      d6 - Thief, Assassin
+      d8 - Cleric, Druid, Ranger
+      d10 - Fighter, Paladin
+
+7 - select Alignment
+8 - Family background
+9 - next of kin for leaving equip to if die while adventuring
+10 - city where currently located
+11 - select Class
+12 - note class modifiers
+13 - Determine known languages
+14 - calculate starting money
+15 - roll and assign 2 secondary skills
+16 - roll character age
+17 - determine weapon proficiency (which weapons proficient with
+18 - spend money on gear and equip character
+19 - calculate armor class
+20 - calculate weight of all gear -> yields movement
+21 - determine spells known
+22 - note base movement
+23 - choose a god if cleric, or optionally, for other classes
+24 - height & weight
+25 - determine unarmed combat modifiers
+26 - notes
+
+----------------
+FEATURES
+- once a character is created we need:
+- a full featured interactive editor
+- inventory: two types:
+    - canonical (stuff listed in PHB and DMG)
+    - custom, which is just a text entry field,
+    - adds to global inventory list
+    - inventory items attach to character that owns them
+- command to cat out character, stats layout is important:
+    - main stats at top
+    - attribute modifiers
+    - race modifiers
+    - class modifiers
+    - cumulative "to-hit" and "damage" with modifiers
+    - saving throws, normal and with modifiers
+
+----------------
+programming classes:
+- rolling_chart, static list of stuff to be rolled against, ie, 'known languages'; ability to Roll() itself
+
+    eg. known_languages = new KnownLanguages()
+        lang = known_languages.Roll() # returns rolled/selected language
+    - stores the list of stuff, and the number rolled on
+    - stores the dice-rolling method
+    - uses random_dice class
+- random_dice class; random num generator, can computer all possible permutations of die-rolls
+
+- charater_sheet
+    - ability to read/write to json
+
+"""

@@ -1,0 +1,148 @@
+- After players choose their basic attributes, 
+- they go to the PHB store, wherein they can aquire basic equipment.
+- Armor Class is always computed automatically.
+    that is, any-time an equipping action takes place, AC is
+    recomputed by looping through inventory, and summing in AC modifiers
+    for every item that has one (or is of type Armor)
+- this means that all Armor, and Weapons sub-class class Item,
+    we do this to impose a degree of uniformity on all the sub-classes.
+- AC is stored in positive numbers, weapons are AC:0, as adding 0, does not
+    change armor class. Platemail, which is AC-type 2, is {AC:8}, as you 
+    would subtract 8 from 10, to get 2.
+
+------------------------------------------------------------------
+Thinking ahead, we need to abstract everything into the right
+    segments. There is a TON of meta-data, more than I had suspected.
+    Basically, the data-segment is 3/4ths of the size of this project:
+    that is, putting PHB, DMG, and maybe even MM, into JSON format.
+    the other 1/3rd are the scripts to operate on this data.
+    how else is this code going to be used?
+
+    - Possible Tkl/TK or QT UI
+    - possible Curses UI
+
+    The thinking is that 70%+ of folks that might use this will be on Windoze,
+    so we need to always be thinking in this direction. doing it commandline
+    first is fine. But the commandline stuff should call API stuff, and as
+    much of the decision making as possible should be put into the API, so
+    that 90% of the commandline stuff merely deals with COmmandline and
+    program flow only.  All of the actual DUNGEONS & DRAGONS should be
+    in the API.
+
+    Secondly, I am going to, legal or not, start by doing the Canonical books.
+    But this means that I need to plan ahead for OSRIC or ADD replacements.
+
+    3rd, I need to plan ahead for rules replacements, eg. Swords & Wizardry,
+    Labrynth Lord, and DCC.  If I can accomodate these, then I have got a
+    tool that might develop a pretty large usership.
+
+- possible Curses UI
+- possible Tcl/Tk or QT ui
+- possible drop-in rules replacements: OSRIC, ADD, S&W, LL, DCC
+
+- Design Pattern: Model-View-Controller. Model is just JSON, so that leaves
+    us with VIEW and CONTROLLER, but V+C both fall into the view-sdk code,
+    which means that there is: View+Controller+APILibrary separation.
+
+MY_ULTIMATE_GOAL:
+    - to make a game that could take user-generated Grid-maps, with Room-Keys,
+        and custom roll-tables, all as META_DATA, be read in and generate
+        a lo-fi gaming experience, that can play according to a number of
+        drop-in rulesets, typically of these classic RPGs.
+
+=============================================================================
+CODE
+=============================================================================
+
+- need class/method that takes a LIST as an input,
+    and returns a string as a result, then runs the UI INPUT as a little
+    sub-routine nugglet
+
+    eg. className = SubMenu( classes )
+    def SubMenu():
+        """does all the stuff that my interactive menus do,
+        - print an arbitrarily lenth table of options in order, with integer
+            indexes
+        - prints, e) exit menu, q) quit to main, c) custom input
+        - print a 'prompt> '
+        - gets input, checks for int or option, loops until exit cond
+            is met, returns string and exits
+        - enums, so the caller knows if it is supposed to return
+        - handles different behaviors, so that all the character class
+            eventualities are handled
+        - takes 'random=1', so that prompt is skipped and random number
+            is selected
+        - can be reused in CREATOR, EDITOR, AUTO-GENERATOR
+
+- dice roll handles '-', '+', '*', '/', and arbitrary length, so,
+    "4d6 + 1d20/7",
+    - needs knowledge of operator precedence
+
+
+
+-----------------------
+EXE NAMES?
+-----------------------
+    chartool
+    onee
+    firsted
+    oe
+    fect - first edition character tool
+    feck - first edition character keeper
+    fecm - first edition character manager
+    cmfe - character manager for first edition
+    fednd
+    dnd - ha!
+    dndfecm -
+
+-----------------------
+TOOL_AND_FUNCTIONALITY
+-----------------------
+- command line tool         take startup and config from rsstool
+
+- ability to ROLL a character for you
+    - with ability to store and manage different DICE ROLLING strategies
+        - see Earthlink doc, Ken's House Rules, ...
+        n enter your one using script, eg. "4d6 drop lowest"... too hard
+
+- Ability to roll dice yourself and manually enter the final attribs
+- ability to edit attribs at any time
+- ability to edit everything
+- ability to keep an Adventure Log, storing entry by entry
+- computes all the to-hit bonuses, saving throws, ...
+- manage inventory
+- print short stats
+- print long stats
+- equip inventory, compute bonuses
+- manage spells (canon)
+- manage custom entered spells
+
+
+- list characters
+- select character
+- interactive mode
+- edit attributes & scores, with quickest possible i/o interface (least number key strokes)
+- print help
+
+- age, height, hair color, race, class,
+
+-----------------------
+TECH
+-----------------------
+- rapid_json
+- write Mongo Frontend for rapid_json, something that takes NOSQL queries and returns JSON ARRAY of OBJECTS
+    with the same syntax support as Queryable
+
+- OR, is there a NoSQlite project that reads/writes database as a local text file ? (there has to be)
+
+
+--------------------------------------------------------------------------------
+THOUGHTS
+
+It's too hard. if you limit the scope to just entering abilities, and then having
+it computing your modified to-hit bonuses and saving throw bonuses for you, thta's not
+too bad. It's finite enough that I might be able to finish it, but getting into logs,
+spells, races, ... it just goes on and on, not to mention all the programming overhead,
+time spent coding when I could be doing something else.
+
+
