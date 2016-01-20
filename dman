@@ -43,44 +43,12 @@ defconfig = """{
         "1d12 + 6"
     ],
     "default_attrib_roll_method" : 1,
-    "class_names": {
-        "Cleric": [ "Acolyte", "Adept", "Priest", "Curate", "Curate", "Canon", "Lama", "Patriarch", "High Priest" ],
-        "Druid": [ "Aspirant", "Ovate", "Initiate of the 1st Circle", "Initiate of the 2nd Circle", "Initiate of the 3rd Circle", "Initiate of the 4th Circle", "Initiate of the 5th Circle", "Initiate of the 6th Circle", "Initiate of the 7th Circle", "Initiate of the 8th Circle", "Initiate of the 9th Circle", "Druid", "Archdruid", "The Great Druid" ],
-        "Fighter": [ "Veteran", "Warrior", "Swordsman", "Hero", "Swashbuckler", "Myrmidon", "Champion", "Superhero", "Lord" ],
-        "Paladin": [ "Gallant", "Keeper", "Protector", "Defender", "Warder", "Guardian", "Chevalier", "Justiciar", "Paladin" ],
-        "Ranger": [ "Runner", "Strider", "Scout", "Courser", "Tracker", "Guide", "Pathfinder", "Ranger", "Ranger Lord" ],
-        "Magic User": [ "Prestidigitator", "Evoker", "Conjurer", "Theurgist", "Thaumaturgist", "Magician", "Enchanter", "Warlock", "Sorcerer", "Necromancer", "Wizard", "Wizard (12th Level)", "Wizard (13th Level)", "Wizard (14th Level)", "Wizard (15th Level)", "Mage (Wizard 16th Level)", "Wizard (17th Level)", "Arch-Mage" ],
-        "Illusionist": [ "Prestidigitator", "Minor Trickster", "Trickster", "Master Trickster", "Cabalist", "Visionist", "Phantasmist", "Apparitionist", "Spellbinder", "Illusionist" ],
-        "Thief": [ "Rogue (Apprentice)", "Footpad", "Cutpurse", "Robber", "Burglar", "Filcher", "Sharper", "Magsman", "Thief", "Master Thief" ],
-        "Assassin": [ "Bravo (Apprentice)", "Rutterkin", "Waghalter", "Murderer", "Thug", "Killer", "Cutthroat", "Executioner", "Assassin", "Expert Assassin", "Senior Assassin", "Chief Assassin", "Prime Assassin", "Guildmaster Assassin", "Grandfather of Assassins" ],
-        "Monk": [ "Novice", "Initiate", "Brother", "Disciple", "Immaculate", "Master", "Superior Master", "Master of Dragons", "Master of the North Wind", "Master of the West Wind", "Master of the South Wind", "Master of the East Wind", "Master of Winter", "Master of Autumn", "Master of Summer", "Master of Spring", "Grand Master of Flowers" ]
-    },
-    "races" : {
-        "Human" : { "pl": "Human" },
-        "Elf" : { "pl": "Elven" },
-        "Dwarf" : { "pl": "Dwarven" },
-        "Halfling" : { "pl": "Halfling" },
-        "Gnome": { "pl": "Gnomish" },
-        "Half-Elf": { "pl": "Half-Elven" },
-        "Half-Orc": { "pl": "Half-Orcish" }
-    },
-    "classes" : {
-        "Cleric" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-3,"l":4}, "money": "3d6 x 10" },
-        "Druid" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-4,"l":5}, "money": "3d6 x 10" },
-        "Fighter" : { "HD": "d10", "SHD": "1d10", "wp":{"in":4,"np":-2,"l":3}, "money": "5d4 x 10" },
-        "Paladin" : { "HD": "d10", "SHD": "1d10", "wp":{"in":3,"np":-2,"l":3}, "money": "5d4 x 10" },
-        "Ranger" : { "HD": "d8", "SHD": "2d8", "wp":{"in":3,"np":-2,"l":3}, "money": "5d4 x 10" },
-        "Magic User" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6}, "money": "2d4 x 10" },
-        "Illusionist" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6}, "money": "2d4 x 10" },
-        "Thief" : { "HD": "d6", "SHD": "1d6", "wp":{"in":2,"np":-3,"l":4}, "money": "2d6 x 10" },
-        "Assassin" : { "HD": "d6", "SHD": "1d6", "wp":{"in":3,"np":-2,"l":4}, "money": "2d6 x 10" },
-        "Monk" : { "HD": "d4", "SHD": "2d4", "wp":{"in":1,"np":-3,"l":2}, "money": "5d4 x 1" }
-    },
-    "alignments": [ "Lawful Good", "Lawful Neutral", "Lawful Evil", "Neutral Good", "True Neutral", "Neutral Evil", "Chaotic Good", "Chaotic Neutral", "Chaotic Evil" ],
-    "equipment": [
-    ]
+    "sleep_time": 0.4
 }
 """
+# data sheets to load
+equipment = {}
+character = {}
 
 menu = """First Edition Dungeons & Dragons Character Management Tool.
 Options are:
@@ -127,7 +95,7 @@ def list_dir(d):
     _ld(d,files)
     return sorted(files)
 
-class RandomDice:
+class RandomDiceRoller:
     def dn(s, n):
         return random.randint(1,n)
     def d4(s):
@@ -216,13 +184,13 @@ class CharacterSheet:
         pass
 
     def LevelName( self ):
-        class_names = config['class_names']
+        class_names = character['classes']
         if self.data['class'] in class_names:
             if self.data['level'] >= len( class_names[ self.data['class'] ] ):
-                return class_names[ self.data['class'] ][-1] + '(' + number_end( self.data['level'] ) + ' Level)'
+                return class_names[ self.data['class'] ]['names'][-1] + '(' + number_end( self.data['level'] ) + ' Level)'
             else:
-                return class_names[ self.data['class'] ][ self.data['level'] - 1 ]
-        return self.data.get( 'custom_class_name', 'Unknown Character' )
+                return class_names[ self.data['class'] ]['names'][ self.data['level'] - 1 ]
+        return self.data.get( 'class' )
 
     def fmt_attrib( self ):
         return fmt_attrib( self.data['attribs'] )
@@ -231,15 +199,12 @@ class CharacterSheet:
         return short_attrib( self.data['attribs'] )
 
     def print( self ):
-        race = self.data['race']
-        if race in config['races']:
-            race = config['races'][ race ]['pl']
         print( self.toString() )
 
     def toString( self ):
         race = self.data['race']
-        if race in config['races']:
-            race = config['races'][ race ]['pl']
+        if race in character['races']:
+            race = character['races'][ race ]['pl']
         # Barney the Prestidigitator, Lv 1 Fighter: 16 14 13 12 16 12, ( 144 gp )
         return '"{}" the {}, Lv {} {} {}: {}'.format( self.data['name'], self.LevelName(), self.data['level'], race, self.data['class'], self.short_attrib() )
 
@@ -254,8 +219,10 @@ def ensure_datadir():
 
 def read_config():
     global config
+    global sleep_time
     with open( datadir + '/config', 'r' ) as f:
         config = json.loads(f.read())
+    sleep_time = config.get('sleep_time', sleep_time)
 
 def write_config():
     with open( datadir + '/config', 'w' ) as f:
@@ -329,7 +296,7 @@ def manual_create_character():
     char = CharacterSheet()
     attribs = char.data['attribs']
     d = char.data
-    dice = RandomDice()
+    dice = RandomDiceRoller()
 
     # NAME
     while True:
@@ -364,7 +331,7 @@ def manual_create_character():
 
     # RACE
     while True:
-        ans = SubMenu( list( config['races'].keys() ), "Select a race: " )
+        ans = SubMenu( list( character['races'].keys() ), "Select a race: " )
         if ans is None:
             return False
         if ans is not False:
@@ -386,7 +353,7 @@ def manual_create_character():
 
     # ALIGNMENT
     while True:
-        ans = SubMenu( config['alignments'], 'What Alignment are They? ' )
+        ans = SubMenu( character['alignments'], 'What Alignment are They? ' )
         if ans:
             break
         if ans is None:
@@ -397,7 +364,7 @@ def manual_create_character():
 
     # CLASS
     while True:
-        ans = SubMenu( sorted( list( config['classes'].keys() ) ), 'select a class' )
+        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'select a class' )
         if ans:
             break
         if ans is None:
@@ -414,11 +381,11 @@ def manual_create_character():
     time.sleep( sleep_time )
 
     # DETERMINE HIT_DICE
-    if d['class'] in config['classes']:
-        d['HD'] = config['classes'][ d['class'] ]['HD']
-        d['SHD'] = config['classes'][ d['class'] ]['SHD']
+    if d['class'] in character['classes']:
+        d['HD'] = character['classes'][ d['class'] ]['HD']
+        d['SHD'] = character['classes'][ d['class'] ]['SHD']
     else:
-        d['HD'] = d['SHD'] = input( 'enter hit-dice for custom class (eg. d6, d10, 2d4)> ' )
+        d['HD'] = d['SHD'] = input( 'enter hit-dice for custom class (eg. d6, 1d8, d10)> ' )
 
     # HIT POINTS (roll hit dice)
     print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
@@ -440,17 +407,17 @@ def manual_create_character():
             if yn( 'keep? ' ):
                 d['hp'] = sum(hp)
                 break
-    print( 'character has {} hit points'.format( d['hp'] ), end='\n\n' )
+    print( '{} has {} hit points'.format( d['class'], d['hp'] ), end='\n\n' )
     time.sleep( sleep_time )
 
     # AGE
     d['age'] = getint( 'How old is {}? '.format(d['name']) )
 
     # STARTING MONEY
-    ca = config['classes'][ d['class'] ]
+    ca = character['classes'][ d['class'] ]
     while True:
-        print( 'Class: {} starts with "{} gp"'.format( d['class'], ca['money'] ) )
-        gp = dice.mult( ca['money'] )
+        print( 'Class: {} starts with "{} gp"'.format( d['class'], ca['starting_money'] ) )
+        gp = dice.mult( ca['starting_money'] )
         if yn( ' rolled {} gp, keep? '.format( gp ) ):
             d['gp'] = gp
             break
@@ -458,46 +425,44 @@ def manual_create_character():
     time.sleep( sleep_time )
 
     # BUY EQUIPMENT
-    with open( './phb_equipment.json', 'r' ) as f:
-        stuff = json.load( f )
     # armor
     while True:
-        for i, v in enumerate( sorted(stuff['armor']) ):
+        for i, v in enumerate( sorted(equipment['armor']) ):
             print( ' {}: {}'.format( i, v ) )
         ans = yn( "this is the place I left off before I went to bed" )
         break
 
-
     # WEAPON PROFICIENCIES
-
-    # EQUIP CHARACTER
-
-    # ARMOR CLASS
-
-    # GEAR WEIGHT
+    #   choose N from equipment list, or write in
 
     # KNOWN SPELLS
-
-    # BASE MOVEMENT RATE
+    #   calculate/allot spells/choose from PHB
 
     # SELECT GOD
+    #   write-in for now
 
-    # HEIGHT
-
-    # WEIGHT
+    # HEIGHT & WEIGHT
 
     # determine known languages
-    # calculate starting money
-    # 2 secondary skills
-
-    # note race modifiers
-    # note saving throws
-    # note class modifiers
-    # note proficiency modifiers
+    # 2 secondary skills, (non-weapon-proficiencies)
 
     # family background
     # next of kin
     # home city
+
+    #{
+        # note race modifiers
+        # note saving throws
+        # note class modifiers
+        # note proficiency modifiers
+    #}
+
+    #--------later-------
+    # EQUIP CHARACTER
+    # ARMOR CLASS (calculated on equip automatically)
+    # GEAR WEIGHT (calculated on equip automatically)
+    # BASE MOVEMENT RATE (calculated on gear weight change)
+    #--------------------
     return char
 
 
@@ -505,7 +470,7 @@ def autogen_character():
     """this creates an entire character, completely randomly, including name"""
     char = CharacterSheet()
     attribs = char.data['attribs']
-    dice = RandomDice()
+    dice = RandomDiceRoller()
     for a in attribs_ordered:
         attribs[a] = dice.roll( config['rolls'][ config['default_attrib_roll_method'] ] )
     char.data['name'] = input( "Enter the character name: " )
@@ -584,6 +549,15 @@ def configure_rolling_method():
         else:
             print( 'unknown selection' )
 
+def load_data():
+    global equipment
+    global character
+    with open( './data/phb_equipment.json', 'r' ) as f:
+        equipment = json.load( f )
+    with open( './data/phb_character.json', 'r' ) as f:
+        character = json.load( f )
+
+
 ##################################################################
 #
 # entry point
@@ -592,6 +566,7 @@ def configure_rolling_method():
 ensure_datadir()
 read_config()
 load_roster()
+load_data()
 
 op = ''
 while op != 'q' and op != 'Q':
