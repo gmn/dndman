@@ -198,6 +198,17 @@ def get_character_for_name( name ):
             return r
     return False
 
+def fmt_item( item ):
+    name = [k for k in item.keys()][0]
+
+    s = '"{}", '.format( name )
+
+    for k, v in item[name].items():
+        s = s + '{} {}, '.format( k, v )
+
+    return s.rstrip()[:-1]
+
+
 class RandomDiceRoller:
     def dn(s, n):
         return random.randint(1,n)
@@ -327,7 +338,9 @@ class CharacterSheet:
         if d['inventory']:
             s += '\n Inventory:\n'
         for item in d['inventory']:
-            s += ' - {}\n'.format( str(item) )
+            if type(item) is type({}):
+                item = fmt_item( item )
+            s += ' - {}\n'.format( item )
         return s
     
 
@@ -379,6 +392,8 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         if header:
             print( header )
         for i, option in enumerate(options):
+            if type(option) is type({}):
+                option = fmt_item( option )
             print( ' {}: "{}"'.format(i, option) )
         print( '\n e] exit to previous menu' )
         print( ' q] quit to main menu' )
@@ -638,13 +653,13 @@ def shop_at_the_store():
                     item_name = [k for k in item.keys()][0]
                     subitem = item[item_name]
                     amt, kind = subitem['cost'].split(' ')
-                    print( '{} costs {}'.format( item_name, subitem['cost'] ) )
+                    print( '"{}" costs {}'.format( item_name, subitem['cost'] ) )
                     print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
                     change = make_change( char['money'], {kind:amt} )
                     if not change:
                         print('\nYou do not have enough for that!\n')
                         continue
-                    confirm = ynq( 'Are you sure you want to buy {}? '.format(item_name) )
+                    confirm = ynq( 'Are you sure you want to buy "{}"? '.format(item_name) )
                     if config is None:
                         return
                     if not confirm:
@@ -652,12 +667,12 @@ def shop_at_the_store():
                     char.data['money'] = change
                     char['inventory'].append(item)
                     char.save()
-                    print( '\nYou bought a {}!\n'.format( item_name ) )
+                    print( '\nYou bought a "{}"!\n'.format( item_name ) )
                     print( 'Change left: '.format( money_toString(change) ) )
-                elif item_name is False:
-                    break
-                else:
+                elif item is None:
                     return
+                else:
+                    break
 
 
 def delete_character_menu():
