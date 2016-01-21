@@ -73,7 +73,7 @@ def dprint( s ):
         print( 'DEBUG: {}'.format(s) )
 
 # money helper methods
-def exchange( it, quantity, ot ):
+def currency_base( it, quantity, ot ):
     io = world['exchange_rate'][it][ot]
     return io * int(quantity)
 
@@ -81,7 +81,7 @@ def frac_coin( money, kind='gp' ):
     tot = 0
     for t in ('cp','sp','gp','ep','pp'):
         if t in money:
-            tot = tot + exchange( t, money[t], kind )
+            tot = tot + currency_base( t, money[t], kind )
     return tot
 
 def make_change( mine, cost ):
@@ -122,8 +122,9 @@ def money_toString( o ):
         if o.get(t):
             s += '{}: {}, '.format(t,o[t])
     if o.get('pp'):
-        s += '{}: {}'.format(t,o[t])
-    return s.rstrip() + ')'
+        s += 'pp: {}'.format(o['pp'])
+    s = s.rstrip() + ') = {}'
+    return s.format(frac_coin(o))
 
 class Money:
     def __init__(self, obj=False):
@@ -164,9 +165,6 @@ class Money:
         # break money into change?
         pass
 
-
-
-
 def number_end( num ):
     if num > 10 and num < 20:
         return str(num) + 'th'
@@ -192,14 +190,11 @@ def list_dir(d):
     _ld(d,files)
     return sorted(files)
 
-def character_for_name( name ):
+def get_character_for_name( name ):
     for r in roster:
         if r.data['name'] == name:
             return r
     return False
-
-def total_gp( money ):
-    pass
 
 class RandomDiceRoller:
     def dn(s, n):
@@ -295,8 +290,8 @@ class CharacterSheet:
     def LevelName( self ):
         class_names = character['classes']
         if self.data['class'] in class_names:
-            if self.data['level'] >= len( class_names[ self.data['class'] ] ):
-                return class_names[ self.data['class'] ]['names'][-1] + '(' + number_end( self.data['level'] ) + ' Level)'
+            if self.data['level'] >= len( class_names[ self.data['class'] ]['names'] ):
+                return class_names[ self.data['class'] ]['names'][-1] + ' (' + number_end( self.data['level'] ) + ' Level)'
             else:
                 return class_names[ self.data['class'] ]['names'][ self.data['level'] - 1 ]
         return self.data.get( 'class' )
@@ -502,7 +497,7 @@ def manual_create_character():
     print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
     manual_enter_hp = not yn( 'Would you like your hit-points to be rolled for you?' )
     if manual_enter_hp:
-        hp = getint( 'enter hitpoints rolled> ' )
+        d['hp'] = getint( 'enter hitpoints rolled> ' )
     else:
         while True:
             hp = []
@@ -585,7 +580,7 @@ def shop_at_the_store():
         name = SubMenu( sorted([r.data['name'] for r in roster]) , "Who will enter the store?", custom=False )
         if not name:
             return
-        char = character_for_name( name )
+        char = get_character_for_name( name )
         if not char:
             print( 'couldn\'t find {}'.format(name) )
             return
@@ -605,7 +600,7 @@ def shop_at_the_store():
                     item = equipment[etype][item_name]
                     amt, kind = item['cost'].split(' ')
                     print( '{} costs {}'.format( item_name, item['cost'] ) )
-                    print( '{} has {} gp'.format( char['name'], money_toString( char['money'] ) ) )
+                    print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
                     change = make_change( char['money'], {kind:amt} )
                     if not change:
                         print('\nYou do not have enough for that!\n')
