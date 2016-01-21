@@ -33,7 +33,7 @@ default_character = {   'attribs':{},
                         'adventure_log': [],
                         'SHD' : '1d6',
                     }
-datadir = os.environ['HOME'] + '/.dndman'
+datadir = os.environ['HOME'] + '/.dnd'
 roster = []
 DEBUG = True
 config = {}
@@ -118,12 +118,13 @@ def make_change( mine, cost ):
 
 def money_toString( o ):
     s = '('
-    for t in ('cp','sp','gp','ep'):
+    for t in ('cp','sp','gp','ep','pp'):
         if o.get(t):
             s += '{}: {}, '.format(t,o[t])
-    if o.get('pp'):
-        s += 'pp: {}'.format(o['pp'])
-    s = s.rstrip() + ') = {}'
+    s = s.rstrip()
+    if s[-1] == ',':
+        s = s[:-1]
+    s = s + ') = {}'
     return s.format(frac_coin(o))
 
 class Money:
@@ -249,6 +250,12 @@ def getint( text ):
 
 def yn( text ):
     val = input( '{} [y/N]: '.format(text) )
+    return val == 'y' or val == 'Y'
+
+def ynq( text ):
+    val = input( '{} [y/N/q]: '.format(text) )
+    if val == 'Q' or val == 'q':
+        return None
     return val == 'y' or val == 'Y'
 
 def fmt_attrib( attribs ):
@@ -397,7 +404,7 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
             return options[ iv ]
 
 
-def manual_create_character():
+def create_character():
     """This is the primary interface that allows a player to roll, generate, or manually enter in a character"""
     char = CharacterSheet()
     attribs = char.data['attribs']
@@ -407,7 +414,9 @@ def manual_create_character():
     # NAME
     while True:
         ans = input( "What is your character's name? " )
-        hmm = yn( 'Character\'s Name is: "{}", keep? '.format(ans) )
+        hmm = ynq( 'Character\'s Name is: "{}", keep? '.format(ans) )
+        if hmm is None:
+            return False
         if hmm:
             break
     char.data['name'] = ans
@@ -415,13 +424,18 @@ def manual_create_character():
     time.sleep( sleep_time )
 
     # ATTRIBUTES
-    auto_roll = yn( 'Would you like your attributes to be rolled for you?' )
+    auto_roll = ynq( 'Would you like your attributes to be rolled for you?' )
+    if auto_roll is None:
+        return
     if not auto_roll:
         while True:
             print( "Enter Attributes Manually:" )
             for a in attribs_ordered:
                 attribs[a] = getint( "Enter {}: ".format(a) )
-            if yn( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ) ):
+            ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ) )
+            if ans is None:
+                return False
+            if ans:
                 break
     else:
         roll_method = config['rolls'][ config['default_attrib_roll_method'] ]
@@ -430,7 +444,10 @@ def manual_create_character():
             for a in attribs_ordered:
                 attribs[a] = dice.roll( roll_method )
             print( 'rolled: {}'.format( fmt_attrib( attribs ) ) )
-            if yn( 'keep?' ):
+            ans = ynq( 'keep?' )
+            if ans is None:
+                return False
+            if ans: 
                 break
     print( 'Using attributes: {}'.format( fmt_attrib( attribs ) ) )
     time.sleep( sleep_time )
@@ -495,7 +512,9 @@ def manual_create_character():
 
     # HIT POINTS (roll hit dice)
     print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
-    manual_enter_hp = not yn( 'Would you like your hit-points to be rolled for you?' )
+    manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?' )
+    if manual_enter_hp is None:
+        return False
     if manual_enter_hp:
         d['hp'] = getint( 'enter hitpoints rolled> ' )
     else:
@@ -510,7 +529,10 @@ def manual_create_character():
             for h in hp[:-1]:
                 print( str(h) + ' +', end=' ' )
             print( '{} = {}'.format( str(hp[-1]), sum(hp) ) )
-            if yn( 'keep? ' ):
+            ans = ynq( 'keep? ' )
+            if ans is None:
+                return False
+            if ans:
                 d['hp'] = sum(hp)
                 break
     print( '{} has {} hit points'.format( d['class'], d['hp'] ), end='\n\n' )
@@ -524,7 +546,10 @@ def manual_create_character():
     while True:
         print( 'Class: {} starts with "{} gp"'.format( d['class'], ca['starting_money'] ) )
         gp = dice.mult( ca['starting_money'] )
-        if yn( ' rolled {} gp, keep? '.format( gp ) ):
+        ans = ynq( ' rolled {} gp, keep? '.format( gp ) )
+        if ans is None:
+            return
+        if ans:
             d['gp'] = gp
             break
     print( 'character got {} gp'.format( d['gp'] ), end='\n\n' )
@@ -595,17 +620,21 @@ def shop_at_the_store():
 
             while True:
                 player_money = '{} has {}'.format( char['name'], money_toString( char['money'] ) )
-                item_name = SubMenu( sorted(equipment[etype].keys()), player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
-                if item_name:
-                    item = equipment[etype][item_name]
-                    amt, kind = item['cost'].split(' ')
-                    print( '{} costs {}'.format( item_name, item['cost'] ) )
+                #item_name = SubMenu( sorted(equipment[etype].keys()), player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
+                item = SubMenu( [{ k: v } for k, v in equipment[etype].items()], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
+                if item:
+                    item_name = [k for k in item.keys()][0]
+                    subitem = item[item_name]
+                    amt, kind = subitem['cost'].split(' ')
+                    print( '{} costs {}'.format( item_name, subitem['cost'] ) )
                     print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
                     change = make_change( char['money'], {kind:amt} )
                     if not change:
                         print('\nYou do not have enough for that!\n')
                         continue
-                    confirm = input( 'are you sure you want to buy {}? '.format(item_name) )
+                    confirm = ynq( 'Are you sure you want to buy {}? '.format(item_name) )
+                    if config is None:
+                        return
                     if not confirm:
                         continue
                     char.data['money'] = change
@@ -714,7 +743,8 @@ while op != 'q' and op != 'Q':
     op = input( menu )
     if op == 'L' or op == 'l':                      # list
         if len(roster) == 0:
-            print( 'no characters' )
+            print( '\n  no characters\n' )
+            time.sleep( sleep_time * 2 )
         for i, c in enumerate(roster):
             print( '{}: '.format(i+1), end='' )
             c.print()
@@ -724,7 +754,7 @@ while op != 'q' and op != 'Q':
 
     elif op == 'C' or op == 'c':                    # create
         print( 'Creating a Player Character' )
-        char = manual_create_character()
+        char = create_character()
         if char:
             char.save()
             char.print()
