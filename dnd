@@ -34,7 +34,12 @@ default_character = {   'attribs':{},
                         'adventure_log': [],
                         'SHD' : '1d6',
                     }
-datadir = os.environ['HOME'] + '/.dnd'
+
+if os.name == 'nt':
+    datadir = os.environ['LOCALAPPDATA' if os.name == 'nt' else 'HOME'] + '\\dnd'
+else:
+    datadir = os.environ['LOCALAPPDATA' if os.name == 'nt' else 'HOME'] + '/.dnd'
+
 roster = []
 DEBUG = True
 config = {}
@@ -42,9 +47,10 @@ sleep_time = 0.45
 defconfig = """{
     "rolls" : [
         "3d6",
-        "1d12 + 6"
+        "1d12 + 6",
+        "2d6 + 6"
     ],
-    "default_attrib_roll_method" : 1,
+    "default_attrib_roll_method" : 0,
     "sleep_time": 0.4
 }
 """
@@ -342,7 +348,7 @@ class CharacterSheet:
                 item = fmt_item( item )
             s += ' - {}\n'.format( item )
         return s
-    
+
 
 def ensure_datadir():
     if not os.path.exists(datadir):
@@ -474,7 +480,7 @@ def create_character():
             ans = ynq( 'keep?' )
             if ans is None:
                 return False
-            if ans: 
+            if ans:
                 break
     print( 'Using attributes: {}'.format( fmt_attrib( attribs ) ) )
     time.sleep( sleep_time )

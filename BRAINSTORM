@@ -1,4 +1,18 @@
-- After players choose their basic attributes, 
+
+- finish equipment list
+- fix item display to handle screen size and multiple pages
+- character edit
+- roll for age
+- finish character creation
+- look at different presentation/SDK/toolkit
+    - Qt
+    - TclTk
+    - Gtk
+    - Curses
+- finish the character sheet printout to include all the stuff
+-----------------------------------------------------------------------------
+
+- After players choose their basic attributes,
 - they go to the PHB store, wherein they can aquire basic equipment.
 - Armor Class is always computed automatically.
     that is, any-time an equipping action takes place, AC is
@@ -7,7 +21,7 @@
 - this means that all Armor, and Weapons sub-class class Item,
     we do this to impose a degree of uniformity on all the sub-classes.
 - AC is stored in positive numbers, weapons are AC:0, as adding 0, does not
-    change armor class. Platemail, which is AC-type 2, is {AC:8}, as you 
+    change armor class. Platemail, which is AC-type 2, is {AC:8}, as you
     would subtract 8 from 10, to get 2.
 
 ------------------------------------------------------------------

@@ -79,12 +79,12 @@
         "Boots, high, soft": { "cost": "1 gp" },
         "Boots, low, hard": { "cost": "1 gp" },
         "Boots, low, soft": { "cost": "8 sp" },
-        "Cap ": { "cost": "1 sp" },
+        "Cap": { "cost": "1 sp" },
         "Cloak": { "cost": "5 sp" },
         "Girdle, broad": { "cost": "2 gp" },
         "Girdle, normal": { "cost": "10 sp" },
         "Hat": { "cost": "7 sp" },
-        "Robe ": { "cost": "6 sp" }
+        "Robe": { "cost": "6 sp" }
     },
 
     "herbs": {
