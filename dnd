@@ -3,6 +3,7 @@ import json
 import random
 import os
 import time
+import sys
 
 ##################################################################
 # CONFIG, GLOBALS
@@ -260,17 +261,9 @@ def ynq( text ):
 
 def fmt_attrib( attribs ):
     s = ''
-    for a in attribs_ordered[:-1]:
+    for a in attribs_ordered:
         s += '{}: {}, '.format( a, attribs[a] )
-    a = attribs_ordered[-1]
-    return s + '{}: {}'.format( a, attribs[a] )
-
-def short_attrib( attribs ):
-    s = ''
-    for a in attribs_ordered[:-1]:
-        s += '{}, '.format( attribs[a] )
-    a = attribs_ordered[-1]
-    return s + '{}'.format( attribs[a] )
+    return s.rstrip()[:-1]
 
 class CharacterSheet:
     def __init__( self, blob = False ):
@@ -307,7 +300,11 @@ class CharacterSheet:
         return fmt_attrib( self.data['attribs'] )
 
     def short_attrib( self ):
-        return short_attrib( self.data['attribs'] )
+        attribs = self.data['attribs']
+        s = ''
+        for a in attribs_ordered:
+            s += '{}, '.format( attribs[a] )
+        return s.rstrip()[:-1]
 
     def print( self ):
         print( self.toString() )
@@ -318,6 +315,21 @@ class CharacterSheet:
             race = character['races'][ race ]['pl']
         # Barney the Prestidigitator, Lv 1 Fighter: 16 14 13 12 16 12, ( 144 gp )
         return '"{}" the {}, Lv {} {} {}: {}'.format( self.data['name'], self.LevelName(), self.data['level'], race, self.data['class'], self.short_attrib() )
+
+    def gen_character_sheet( self ):
+        d = self.data
+        race = d['race']
+        if race in character['races']:
+            race = character['races'][ race ]['pl']
+        s = '\n "{}" the {}, Lv {} {} {}\n\n'.format( d['name'], self.LevelName(), d['level'], race, d['class'] )
+        for a in attribs_ordered:
+            s += '  {}: {}\n'.format( a.upper(), d['attribs'][a] )
+        if d['inventory']:
+            s += '\n Inventory:\n'
+        for item in d['inventory']:
+            s += ' - {}\n'.format( str(item) )
+        return s
+    
 
 def ensure_datadir():
     if not os.path.exists(datadir):
@@ -727,6 +739,26 @@ def load_data():
     world = json.load( fh )
     fh.close()
 
+def list_characters():
+    if len(roster) == 0:
+        print( '\n  no characters\n' )
+        time.sleep( sleep_time * 2 )
+    for i, c in enumerate(roster):
+        print( '{}: '.format(i+1), end='' )
+        c.print()
+
+def check_cmdline_args():
+    if 'list' in sys.argv or '-l' in sys.argv:
+        list_characters()
+        return True
+    if len(sys.argv) > 1:
+        try:
+            iv = int(sys.argv[1])
+            if iv < len(roster):
+                print( roster[iv].gen_character_sheet() )
+                return True
+        except:
+            pass
 
 ##################################################################
 #
@@ -738,17 +770,14 @@ read_config()
 load_roster()
 load_data()
 
+if check_cmdline_args():
+    sys.exit(0)
+
 op = ''
 while op != 'q' and op != 'Q':
     op = input( menu )
     if op == 'L' or op == 'l':                      # list
-        if len(roster) == 0:
-            print( '\n  no characters\n' )
-            time.sleep( sleep_time * 2 )
-        for i, c in enumerate(roster):
-            print( '{}: '.format(i+1), end='' )
-            c.print()
-
+        list_characters()
     elif op == 'E' or op == 'e':                    # edit
         print( 'Not Implemented' )
 
