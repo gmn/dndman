@@ -583,9 +583,9 @@ def create_character():
         if ans is None:
             return
         if ans:
-            d['gp'] = gp
+            d['money'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
             break
-    print( 'character got {} gp'.format( d['gp'] ), end='\n\n' )
+    print( 'character got {} gp'.format( gp ), end='\n\n' )
     time.sleep( sleep_time )
 
 
@@ -644,7 +644,7 @@ def shop_at_the_store():
             return
 
         while True:
-            print( '{} has {} gp'.format( char['name'], money_toString( char['money'] ) ) )
+            print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
             etype = SubMenu( sorted(equipment.keys()), 'What category would you like to peruse?', custom=False )
             if etype is None:
                 return
@@ -765,21 +765,30 @@ def list_characters():
         print( '\n  no characters\n' )
         time.sleep( sleep_time * 2 )
     for i, c in enumerate(roster):
-        print( '{}: '.format(i+1), end='' )
+        print( '{}: '.format(i), end='' )
         c.print()
 
 def check_cmdline_args():
-    if 'list' in sys.argv or '-l' in sys.argv:
-        list_characters()
-        return True
-    if len(sys.argv) > 1:
-        try:
-            iv = int(sys.argv[1])
-            if iv < len(roster):
+    args = sys.argv[1:]
+    for l in ('list','-l','l'):
+        if l in sys.argv[1:]:
+            list_characters()
+            return True
+    for c in ('-c','char','character'):
+        if c in args:
+            try:
+                iv = args.index(c) + 1
+                if iv >= len(args):   # will throw
+                    print( 'invalid argument' )
+                    sys.exit(-1)
+                iv = int(args[iv])
+                if iv >= len(roster):
+                    sys.exit(-3)
                 print( roster[iv].gen_character_sheet() )
                 return True
-        except:
-            pass
+            except:
+                print( 'invalid argument' )
+                sys.exit(-2)
 
 ##################################################################
 #
@@ -807,7 +816,10 @@ while op != 'q' and op != 'Q':
         char = create_character()
         if char:
             char.save()
+            print('\nCongratulations, you have created:\n  ')
             char.print()
+            print('')
+            time.sleep( sleep_time * 2 )
 
     elif op.upper() == 'S':                         # shop
         shop_at_the_store()
