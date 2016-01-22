@@ -1,20 +1,22 @@
 
-- SubMenu sections in character creation, need a confirmation, eg. Class is Fighter, keep? [Y/n/q]
-- finish equipment list
-- fix item display to handle screen size and multiple pages
-- character edit
-X roll for age
-- finish character creation
-    - enter spells
-- look at different presentation/SDK/toolkit
-    - Qt
-    - TclTk
-    - Gtk
-    - Curses
-- finish the character sheet printout to include all the stuff, and be formatted well
+-------------------
+ TODO (in order)
+-------------------
+    X need manual age entry
+    - in character creation, the SubMenu sections need a confirmation, eg. Class is Fighter, keep? [Y/n/q]
+    - finish equipment list
+    - enter all the spells, titles only
+    - finish character creation
+    - handle screen size and multiple pages
+    - finish the character sheet printout to include all the stuff, and be formatted well
+    - add DMG magic items
+
+- edit character
+- look at different presentation/SDK/toolkit: [ Qt, TclTk, Gtk, Curses ]
 - automatic character generator
     - super large list of medieval names
-    - once it is done, adapt character generator for DCC
+- adapt for DCC
+- (should be working on a Module for DCC, and submit to Joseph Goodman)
 -----------------------------------------------------------------------------
 
 - After players choose their basic attributes,

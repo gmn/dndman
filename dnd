@@ -263,8 +263,14 @@ class RollingChart:
     pass
 
 def getint( text ):
+    if text[-1] != ' ':
+        text = '{} '.format( text )
     val = input( text )
-    return int( val )
+    try:
+        i = int( val.lstrip().rstrip() )
+        return i
+    except:
+        return False
 
 def yn( text ):
     val = input( '{} [y/N]: '.format(text) )
@@ -390,7 +396,7 @@ def load_roster():
             roster.append( CharacterSheet( json.load(f) ) )
 
 
-def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False ):
+def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False, default=False ):
     """ takes a list,
         X prints a header
         X prints an arbitary length list of options
@@ -418,10 +424,15 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         if custom:
             print( ' c] enter custom type' )
 
+        prompt = prompt.rstrip()
+        if default:
+            prompt = prompt.replace('>', ' (default: {})>'.format(default) )
+
         if prompt[-1] != ' ':
             prompt = '{} '.format(prompt)
 
-        s = input( prompt )
+        # get the input
+        s = input( prompt ).rstrip().lstrip()
 
         if custom and s == 'c':
             while True:
@@ -438,13 +449,17 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         elif s == 'q':
             return None
         else:
+            if not s:
+                return default
             try:
                 iv = int(s)
             except:
                 print( 'invalid selection' )
+                time.sleep( sleep_time )
                 continue
             if iv < 0 and iv >= len(options):
                 print( 'invalid selection' )
+                time.sleep( sleep_time )
                 continue
             return options[ iv ]
 
@@ -458,74 +473,90 @@ def create_character():
 
     # NAME
     while True:
-        ans = input( "What is your character's name? " )
+        ans = input( "What is your character's name ('q' to quit)? " )
+        if not ans:
+            print( "empty string invalid" )
+            continue
+        elif ans == 'q':
+            return False
         hmm = ynq( 'Character\'s Name is: "{}", keep? '.format(ans), 'y' )
         if hmm is None:
             return False
-        if hmm:
+        elif hmm:
             break
     char.data['name'] = ans
     print( 'Name: "{}"'.format(d['name']), end='\n\n' )
     time.sleep( sleep_time )
 
     # ATTRIBUTES
-    auto_roll = ynq( 'Would you like your attributes to be rolled for you?', 'y' )
-    if auto_roll is None:
-        return
-    if not auto_roll:
-        while True:
+    while True:
+        auto_roll = ynq( 'Would you like your attributes to be rolled for you?', 'y' )
+        if auto_roll is None:
+            return
+        elif not auto_roll:
             print( "Enter Attributes Manually:" )
             for a in attribs_ordered:
-                attribs[a] = getint( "Enter {}: ".format(a) )
-            ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ), 'n' )
+                attribs[a] = getint( " Enter {} ? ".format(a.upper()) )
+            ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ), 'y' )
             if ans is None:
                 return False
-            if ans:
+            elif ans:
                 break
-    else:
-        roll_method = config['rolls'][ config['default_attrib_roll_method'] ]
-        while True:
+        else:
+            roll_method = config['rolls'][ config['default_attrib_roll_method'] ]
             print( 'Rolling automatically using dice method: "{}"'.format( roll_method ) )
             for a in attribs_ordered:
                 attribs[a] = dice.roll( roll_method )
             print( 'rolled: {}'.format( fmt_attrib( attribs ) ) )
-            ans = ynq( 'keep?', 'n' )
+            ans = ynq( 'keep?', 'y' )
             if ans is None:
                 return False
-            if ans:
+            elif ans:
                 break
-    print( 'Using attributes: {}'.format( fmt_attrib( attribs ) ) )
+    print( 'Character has attributes: {}'.format( fmt_attrib( attribs ) ) )
     time.sleep( sleep_time )
 
     # RACE
     while True:
-        ans = SubMenu( list( character['races'].keys() ), "Select a race: ", custom=True )
+        ans = SubMenu( list( character['races'].keys() ), "Select a race: ", custom=True, default='Human' )
         if ans is None:
             return False
-        if ans is not False:
-            break
+        if ans:
+            keep = ynq( 'selected: "{}", keep?'.format( ans ), 'y' )
+            if keep is None:
+                return False
+            elif keep:
+                break
     d['race'] = ans
-    print( 'selected: "{}"'.format( d['race'] ), end='\n\n' )
+    print( 'Race is: "{}"'.format( d['race'] ), end='\n\n' )
     time.sleep( sleep_time )
 
     # SEX
     while True:
-        ans = SubMenu( ['Male', 'Female'], 'What Sex are They [Male or Female]?', custom=True )
+        ans = SubMenu( ['Male', 'Female'], 'What Sex are They?', custom=True, default='Male' )
         if ans is None:
             return False
-        if ans is not False:
-            break
+        if ans:
+            keep = ynq( 'selected: "{}", keep?'.format( ans ), 'y' )
+            if keep is None:
+                return False
+            elif keep:
+                break
     d['sex'] = ans
     print( 'got sex: "{}"'.format( d['sex'] ), end='\n\n' )
     time.sleep( sleep_time )
 
     # ALIGNMENT
     while True:
-        ans = SubMenu( character['alignments'], 'What Alignment is "{}"? '.format(d['name']), custom=True )
-        if ans:
-            break
+        ans = SubMenu( character['alignments'], 'What Alignment is "{}"? '.format(d['name']), custom=True, default='Neutral Good' )
         if ans is None:
             return False
+        if ans:
+            keep = ynq( 'selected: "{}", keep?'.format( ans ), 'y' )
+            if keep is None:
+                return False
+            elif keep:
+                break
     d['alignment'] = ans
     print( 'got alignment: "{}"'.format( d['alignment'] ), end='\n\n' )
     time.sleep( sleep_time )
@@ -533,19 +564,30 @@ def create_character():
     # CLASS
     while True:
         ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'select a class', custom=True )
-        if ans:
-            break
         if ans is None:
             return False
+        if ans:
+            keep = ynq( 'selected: "{}", keep?'.format( ans ), 'y' )
+            if keep is None:
+                return False
+            elif keep:
+                break
     d['class'] = ans
     print( 'got class: "{}"'.format( d['class'] ), end='\n\n' )
     time.sleep( sleep_time )
 
     # ENTER LEVEL
-    ans = input( 'What level is "{}" (default: 1)> '.format(d['name']) )
-    if ans:
-        d['level'] = int(ans)
-    print( 'got "{}" level'.format( number_end( d['level'] ) ), end='\n\n' )
+    while True:
+        ans = getint( 'What level is "{}" (default: 1)> '.format(d['name']) )
+        if ans is False:
+            ans = 1
+        keep = ynq( 'selected: "{} Level", keep?'.format( number_end(ans) ), 'y' )
+        if keep is None:
+            return False
+        elif keep:
+            break
+    d['level'] = ans
+    print( '{} is "{} level"'.format( d['name'], number_end( d['level'] ) ), end='\n\n' )
     time.sleep( sleep_time )
 
     # DETERMINE HIT_DICE (manual only for custom class)
@@ -556,14 +598,22 @@ def create_character():
         d['HD'] = d['SHD'] = input( 'enter hit-dice for custom class (eg. d6, 1d8, d10)> ' )
 
     # HIT_POINTS (roll hit dice)
-    print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
-    manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?', 'y' )
-    if manual_enter_hp is None:
-        return False
-    if manual_enter_hp:
-        d['hp'] = getint( 'enter hitpoints rolled> ' )
-    else:
-        while True:
+    while True:
+        print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
+        manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?', 'y' )
+        if manual_enter_hp is None:
+            return False
+        if manual_enter_hp:
+            hp = getint( 'enter hitpoints> ' )
+            if not hp:
+                continue
+            ans = ynq( 'got: {}, keep?'.format(hp), 'y' )
+            if ans is None:
+                return False
+            elif ans:
+                d['hp'] = hp
+                break
+        else:
             hp = []
             hp.append( dice.roll( d['SHD'] ) )
             i = 1
