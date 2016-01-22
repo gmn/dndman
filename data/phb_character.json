@@ -8,6 +8,7 @@
         "Half-Elf": { "pl": "Half-Elven" },
         "Half-Orc": { "pl": "Half-Orcish" }
     },
+
     "classes" : {
         "Cleric" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-3,"l":4},
             "starting_money": "3d6 x 10",
@@ -21,7 +22,7 @@
                 "Patriarch",
                 "High Priest" ]
         },
-        "Druid" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-4,"l":5}, 
+        "Druid" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-4,"l":5},
             "starting_money": "3d6 x 10",
             "names": [  "Aspirant",
                         "Ovate",
@@ -38,7 +39,7 @@
                         "Archdruid",
                         "The Great Druid" ]
         },
-        "Fighter" : { "HD": "d10", "SHD": "1d10", "wp":{"in":4,"np":-2,"l":3}, 
+        "Fighter" : { "HD": "d10", "SHD": "1d10", "wp":{"in":4,"np":-2,"l":3},
             "starting_money": "5d4 x 10",
             "names": [ "Veteran",
                         "Warrior",
@@ -50,7 +51,7 @@
                         "Superhero",
                         "Lord" ]
         },
-        "Paladin" : { "HD": "d10", "SHD": "1d10", "wp":{"in":3,"np":-2,"l":3}, 
+        "Paladin" : { "HD": "d10", "SHD": "1d10", "wp":{"in":3,"np":-2,"l":3},
             "starting_money": "5d4 x 10",
             "names": [ "Gallant",
                         "Keeper",
@@ -62,7 +63,7 @@
                         "Justiciar",
                         "Paladin" ]
         },
-        "Ranger" : { "HD": "d8", "SHD": "2d8", "wp":{"in":3,"np":-2,"l":3}, 
+        "Ranger" : { "HD": "d8", "SHD": "2d8", "wp":{"in":3,"np":-2,"l":3},
             "starting_money": "5d4 x 10",
             "names": [ "Runner",
                         "Strider",
@@ -74,7 +75,7 @@
                         "Ranger",
                         "Ranger Lord" ]
         },
-        "Magic User" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6}, 
+        "Magic User" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6},
             "starting_money": "2d4 x 10",
             "names": [ "Prestidigitator",
                         "Evoker",
@@ -95,7 +96,7 @@
                         "Wizard (17th Level)",
                         "Arch-Mage" ]
         },
-        "Illusionist" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6}, 
+        "Illusionist" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6},
             "starting_money": "2d4 x 10",
             "names": [ "Prestidigitator",
                         "Minor Trickster",
@@ -108,7 +109,7 @@
                         "Spellbinder",
                         "Illusionist" ]
         },
-        "Thief" : { "HD": "d6", "SHD": "1d6", "wp":{"in":2,"np":-3,"l":4}, 
+        "Thief" : { "HD": "d6", "SHD": "1d6", "wp":{"in":2,"np":-3,"l":4},
             "starting_money": "2d6 x 10",
             "names": [ "Rogue (Apprentice)",
                         "Footpad",
@@ -121,7 +122,7 @@
                         "Thief",
                         "Master Thief" ]
         },
-        "Assassin" : { "HD": "d6", "SHD": "1d6", "wp":{"in":3,"np":-2,"l":4}, 
+        "Assassin" : { "HD": "d6", "SHD": "1d6", "wp":{"in":3,"np":-2,"l":4},
             "starting_money": "2d6 x 10",
             "names": [ "Bravo (Apprentice)",
                         "Rutterkin",
@@ -139,7 +140,7 @@
                         "Guildmaster Assassin",
                         "Grandfather of Assassins" ]
         },
-        "Monk" : { "HD": "d4", "SHD": "2d4", "wp":{"in":1,"np":-3,"l":2}, 
+        "Monk" : { "HD": "d4", "SHD": "2d4", "wp":{"in":1,"np":-3,"l":2},
             "starting_money": "5d4 x 1",
             "names": [ "Novice",
                         "Initiate",
@@ -168,6 +169,62 @@
                     "Neutral Evil",
                     "Chaotic Good",
                     "Chaotic Neutral",
-                    "Chaotic Evil" ]
-    
+                    "Chaotic Evil" ],
+
+    "starting-age" : {
+        "Dwarf" :{  "Cleric" :      "250 + 2d20",
+                    "Fighter" :     "40 + 5d4",
+                    "Magic User" :  "50 + 1d100",
+                    "Thief" :       "75 + 3d6" },
+
+        "Elf" : {   "Cleric" :      "500 + 10d10",
+                    "Fighter" :     "130 + 5d6",
+                    "Magic User" :  "150 + 5d6",
+                    "Thief" :       "100 + 5d6" },
+
+        "Gnome" : { "Cleric" :      "300 + 3d12",
+                    "Fighter" :     "60 + 5d4",
+                    "Magic User" :  "100 + 2d12",
+                    "Thief" :       "80 + 5d4" },
+
+        "Half-Elf" : { "Cleric" :   "40 + 2d4",
+                    "Fighter" :     "22 + 3d4",
+                    "Magic User" :  "30 + 2d8",
+                    "Thief" :       "22 + 3d8" },
+
+        "Halfling" : { "Cleric" :   "34 + 6d6",
+                    "Fighter" :     "20 + 3d4",
+                    "Magic User" :  "34 + 6d6",
+                    "Thief" :       "40 + 2d4" },
+
+        "Half-Orc" : { "Cleric" :   "20 + 1d4",
+                    "Fighter" :     "13 + 1d4",
+                    "Magic User" :  "20 + 1d10",
+                    "Thief" :       "20 + 2d4" },
+
+        "Human" : { "Cleric" :      "18 + 1d4",
+                    "Druid" :       "18 + 1d4",
+                    "Fighter" :     "15 + 1d4",
+                    "Paladin" :     "17 + 1d4",
+                    "Ranger" :      "20 + 1d4",
+                    "Magic User" :  "24 + 2d8",
+                    "Illusionist" : "30 + 1d6",
+                    "Thief" :       "18 + 1d4",
+                    "Assassin" :    "20 + 1d4",
+                    "Monk" :        "21 + 1d4"
+        }
+    },
+
+    "subclass-membership" : {   "Cleric" :      "Cleric",
+                                "Druid" :       "Cleric",
+                                "Fighter" :     "Fighter",
+                                "Paladin" :     "Fighter",
+                                "Ranger" :      "Fighter",
+                                "Magic User" :  "Magic User",
+                                "Illusionist" : "Magic User",
+                                "Thief" :       "Thief",
+                                "Assassin" :    "Thief",
+                                "Monk" :        "Thief"
+    }
+
 }

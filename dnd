@@ -270,8 +270,20 @@ def yn( text ):
     val = input( '{} [y/N]: '.format(text) )
     return val == 'y' or val == 'Y'
 
-def ynq( text ):
-    val = input( '{} [y/N/q]: '.format(text) )
+def ynq( text, default_action='n' ):
+    suffix = '[';
+    for letter in ('y','n','q'):
+        if letter.upper() == default_action.upper():
+            suffix += letter.upper() + '/'
+        else:
+            suffix += letter.lower() + '/'
+    suffix = suffix[:-1] + ']'
+
+    val = input( '{} {}: '.format(text, suffix) )
+
+    if not val or len(val) == 0:
+        return {'y':True,'n':False,'q':None}.get(default_action.lower(),False)
+
     if val == 'Q' or val == 'q':
         return None
     return val == 'y' or val == 'Y'
@@ -447,7 +459,7 @@ def create_character():
     # NAME
     while True:
         ans = input( "What is your character's name? " )
-        hmm = ynq( 'Character\'s Name is: "{}", keep? '.format(ans) )
+        hmm = ynq( 'Character\'s Name is: "{}", keep? '.format(ans), 'y' )
         if hmm is None:
             return False
         if hmm:
@@ -457,7 +469,7 @@ def create_character():
     time.sleep( sleep_time )
 
     # ATTRIBUTES
-    auto_roll = ynq( 'Would you like your attributes to be rolled for you?' )
+    auto_roll = ynq( 'Would you like your attributes to be rolled for you?', 'y' )
     if auto_roll is None:
         return
     if not auto_roll:
@@ -465,7 +477,7 @@ def create_character():
             print( "Enter Attributes Manually:" )
             for a in attribs_ordered:
                 attribs[a] = getint( "Enter {}: ".format(a) )
-            ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ) )
+            ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ), 'n' )
             if ans is None:
                 return False
             if ans:
@@ -477,7 +489,7 @@ def create_character():
             for a in attribs_ordered:
                 attribs[a] = dice.roll( roll_method )
             print( 'rolled: {}'.format( fmt_attrib( attribs ) ) )
-            ans = ynq( 'keep?' )
+            ans = ynq( 'keep?', 'n' )
             if ans is None:
                 return False
             if ans:
@@ -509,7 +521,7 @@ def create_character():
 
     # ALIGNMENT
     while True:
-        ans = SubMenu( character['alignments'], 'What Alignment are They? ', custom=True )
+        ans = SubMenu( character['alignments'], 'What Alignment is "{}"? '.format(d['name']), custom=True )
         if ans:
             break
         if ans is None:
@@ -530,22 +542,22 @@ def create_character():
     time.sleep( sleep_time )
 
     # ENTER LEVEL
-    ans = input( 'what level are you (default: 1)> ' )
+    ans = input( 'What level is "{}" (default: 1)> '.format(d['name']) )
     if ans:
         d['level'] = int(ans)
     print( 'got "{}" level'.format( number_end( d['level'] ) ), end='\n\n' )
     time.sleep( sleep_time )
 
-    # DETERMINE HIT_DICE
+    # DETERMINE HIT_DICE (manual only for custom class)
     if d['class'] in character['classes']:
         d['HD'] = character['classes'][ d['class'] ]['HD']
         d['SHD'] = character['classes'][ d['class'] ]['SHD']
     else:
         d['HD'] = d['SHD'] = input( 'enter hit-dice for custom class (eg. d6, 1d8, d10)> ' )
 
-    # HIT POINTS (roll hit dice)
+    # HIT_POINTS (roll hit dice)
     print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
-    manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?' )
+    manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?', 'y' )
     if manual_enter_hp is None:
         return False
     if manual_enter_hp:
@@ -562,7 +574,7 @@ def create_character():
             for h in hp[:-1]:
                 print( str(h) + ' +', end=' ' )
             print( '{} = {}'.format( str(hp[-1]), sum(hp) ) )
-            ans = ynq( 'keep? ' )
+            ans = ynq( 'keep?', 'y' )
             if ans is None:
                 return False
             if ans:
@@ -572,14 +584,36 @@ def create_character():
     time.sleep( sleep_time )
 
     # AGE
-    d['age'] = getint( 'How old is {}? '.format(d['name']) )
+    # sub Dwarf for non-standard character race
+    ans = ynq( 'Would you like {}\'s age rolled for you?'.format(d['name']), 'y' )
+    if ans:
+        race = d['race'] if d['race'] in character['races'] else 'Dwarf'
+        # use Cleric as default for non-book classes
+        className = d['class'] if d['class'] in character['classes'] else 'Cleric'
+        if race != 'Human':
+            # demi-humans only have tables by super-class
+            className = character['subclass-membership'][ className ]
+        dieroll = character['starting-age'][race][className]
+        while True:
+            years = dice.roll( dieroll )
+            ans = ynq( 'An {} rolls "{}" for {} years starting age, keep?'.format(d['race'], dieroll, years ), 'y' )
+            if ans is None:
+                return
+            if ans:
+                d['age'] = years
+                break
+    else:
+        d['age'] = getint( 'Enter {}\'s age in years? '.format(d['name']) )
+    print( 'character is {} years old'.format( d['age'] ), end='\n\n' )
+    time.sleep( sleep_time )
+
 
     # STARTING MONEY
     ca = character['classes'][ d['class'] ]
     while True:
         print( 'Class: {} starts with "{} gp"'.format( d['class'], ca['starting_money'] ) )
         gp = dice.mult( ca['starting_money'] )
-        ans = ynq( ' rolled {} gp, keep? '.format( gp ) )
+        ans = ynq( ' rolled {} gp, keep? '.format( gp ), 'y' )
         if ans is None:
             return
         if ans:
@@ -665,7 +699,7 @@ def shop_at_the_store():
                     if not change:
                         print('\nYou do not have enough for that!\n')
                         continue
-                    confirm = ynq( 'Are you sure you want to buy "{}"? '.format(item_name) )
+                    confirm = ynq( 'Are you sure you want to buy "{}"? '.format(item_name), 'y' )
                     if config is None:
                         return
                     if not confirm:

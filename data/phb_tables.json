@@ -1,9 +1,14 @@
-
 {
+    "comments" : "Tables work by looping through once, in ascending fashion, starting at the lowest array index. The roll is computed from the o['Table name']['roll'] attribute, and compared to the ['table']['i'], as soon as roll > ['i'], then we know that the previous cell contains the answer, and ['table']['v'] is returned.",
+
+
+
     "random_language" : {
+        "note" : " ** NOT DONE ** ",
         "title" : "Random Language Determination Table",
+        "roll" : "1d100",
         "table" : [
-            { "i" : 1, "lang" : "Brownies" },
+            { "i" : 1, "v" : "Brownies" },
             { "i" : 3, "lang" : "Bugbear" },
             { "i" : 3, "lang" : "Centaur" },
             { "i" : 3, "lang" : "Dragon, Black" },
@@ -21,4 +26,7 @@
             { "i" : 3, "lang" : "Dryad" },
             { "i" : 3, "lang" : "Dryad" },
             { "i" : 3, "lang" : "Dryad" },
-            { "i" : 3, "lang" : "Dryad" },
+            { "i" : 3, "lang" : "Dryad" }
+        ]
+    }
+}
