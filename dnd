@@ -634,20 +634,19 @@ def create_character():
 
     # HEIGHT & WEIGHT
 
-    # determine known languages
-    # 2 secondary skills, (non-weapon-proficiencies)
+    # KNOWN LANGUAGES
 
-    # family background
-    # next of kin
-    # home city
+    # NON-WEAPON-PROFICIENCIES
 
-    #{
-        # note race modifiers
-        # note saving throws
-        # note class modifiers
-        # note proficiency modifiers
-    #}
+    # FAMILY BACKGROUND
+    # NEXT OF KIN
+    # HOME CITY
 
+    #--------------------
+    # note race modifiers
+    # note saving throws
+    # note class modifiers
+    # note proficiency modifiers
     #--------later-------
     # EQUIP CHARACTER
     # ARMOR CLASS (calculated on equip automatically)
