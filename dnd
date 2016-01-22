@@ -611,9 +611,8 @@ def create_character():
     # STARTING MONEY
     ca = character['classes'][ d['class'] ]
     while True:
-        print( 'Class: {} starts with "{} gp"'.format( d['class'], ca['starting_money'] ) )
         gp = dice.mult( ca['starting_money'] )
-        ans = ynq( ' rolled {} gp, keep? '.format( gp ), 'y' )
+        ans = ynq( '{} starts with "{} gp". Rolled {} gp, keep? '.format( d['class'], ca['starting_money'], gp ), 'y' )
         if ans is None:
             return
         if ans:

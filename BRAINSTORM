@@ -1,15 +1,20 @@
 
+- SubMenu sections in character creation, need a confirmation, eg. Class is Fighter, keep? [Y/n/q]
 - finish equipment list
 - fix item display to handle screen size and multiple pages
 - character edit
-- roll for age
+X roll for age
 - finish character creation
+    - enter spells
 - look at different presentation/SDK/toolkit
     - Qt
     - TclTk
     - Gtk
     - Curses
-- finish the character sheet printout to include all the stuff
+- finish the character sheet printout to include all the stuff, and be formatted well
+- automatic character generator
+    - super large list of medieval names
+    - once it is done, adapt character generator for DCC
 -----------------------------------------------------------------------------
 
 - After players choose their basic attributes,
