@@ -758,52 +758,43 @@ def autogen_character():
     char.data['name'] = input( "Enter the character name: " )
     return char
 
-def shop_at_the_store():
+def shop_at_the_store( char ):
     while True:
-        name = SubMenu( sorted([r.data['name'] for r in roster]) , "Who will enter the store?", custom=False )
-        if not name:
+        print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
+        etype = SubMenu( sorted(equipment.keys()), 'What category would you like to peruse?', custom=False )
+        if etype is None:
             return
-        char = get_character_for_name( name )
-        if not char:
-            print( 'couldn\'t find {}'.format(name) )
-            return
+        elif etype is False:
+            break
 
         while True:
-            print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
-            etype = SubMenu( sorted(equipment.keys()), 'What category would you like to peruse?', custom=False )
-            if etype is None:
-                return
-            elif etype is False:
-                break
-
-            while True:
-                player_money = '{} has {}'.format( char['name'], money_toString( char['money'] ) )
-                #item_name = SubMenu( sorted(equipment[etype].keys()), player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
-                item = SubMenu( [{ k: v } for k, v in equipment[etype].items()], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
-                if item:
-                    item_name = [k for k in item.keys()][0]
-                    subitem = item[item_name]
-                    amt, kind = subitem['cost'].split(' ')
-                    print( '"{}" costs {}'.format( item_name, subitem['cost'] ) )
-                    print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
-                    change = make_change( char['money'], {kind:amt} )
-                    if not change:
-                        print('\nYou do not have enough for that!\n')
-                        continue
-                    confirm = ynq( 'Are you sure you want to buy "{}"? '.format(item_name), 'y' )
-                    if config is None:
-                        return
-                    if not confirm:
-                        continue
-                    char.data['money'] = change
-                    char['inventory'].append(item)
-                    char.save()
-                    print( '\nYou bought a "{}"!\n'.format( item_name ) )
-                    print( 'Change left: '.format( money_toString(change) ) )
-                elif item is None:
+            player_money = '{} has {}'.format( char['name'], money_toString( char['money'] ) )
+            #item_name = SubMenu( sorted(equipment[etype].keys()), player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
+            item = SubMenu( [{ k: v } for k, v in equipment[etype].items()], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
+            if item:
+                item_name = [k for k in item.keys()][0]
+                subitem = item[item_name]
+                amt, kind = subitem['cost'].split(' ')
+                print( '"{}" costs {}'.format( item_name, subitem['cost'] ) )
+                print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
+                change = make_change( char['money'], {kind:amt} )
+                if not change:
+                    print('\nYou do not have enough for that!\n')
+                    continue
+                confirm = ynq( 'Are you sure you want to buy "{}"? '.format(item_name), 'y' )
+                if config is None:
                     return
-                else:
-                    break
+                if not confirm:
+                    continue
+                char.data['money'] = change
+                char['inventory'].append(item)
+                char.save()
+                print( '\nYou bought a "{}"!\n'.format( item_name ) )
+                print( 'Change left: '.format( money_toString(change) ) )
+            elif item is None:
+                return
+            else:
+                break
 
 
 def delete_character_menu():
@@ -916,17 +907,7 @@ def check_cmdline_args():
                 print( 'invalid argument' )
                 sys.exit(-2)
 
-def edit_character():
-    while True:
-        name = SubMenu( [r.data['name'] for r in roster], 'Edit which character?', exit=False, default=None )
-        if not name:
-            return
-
-        char = get_character_for_name( name )
-        if not char:
-            print( '{} not found!'.format(name) )
-            continue
-
+def edit_inventory( char ):
         while True:
             print( '\nEditing: "{}"'.format(char['name']) )
             if char['inventory']:
@@ -938,18 +919,11 @@ def edit_character():
             else:
                 print('* no items *')
 
-            ans = input("""
- n) add new item
- s) Shop at The Players Handbook store
- d) delete item
- q) quit to previous menu
-select> """)
-
+            ans = input("""\nn) add new item\ns) Shop at The Players Handbook store\nd) delete item\nq) quit to previous menu\nselect> """)
             if ans == 'q':
                 break
-
-            if ans == 's':
-                shop_at_the_store()
+            elif ans == 's':
+                shop_at_the_store( char )
 
             elif ans == 'n':
                 while True:
@@ -960,7 +934,7 @@ select> """)
                     if item.lower() == 'q':
                         break
                     char['inventory'].append(item)
-                    print( '\n"{}" gets {} "{}"'.format(name, 'an' if vowel(item[0]) else 'a', item) )
+                    print( '\n"{}" gets {} "{}"'.format(char['name'], 'an' if vowel(item[0]) else 'a', item) )
                     time.sleep( sleep_time * 2 )
                     break
 
@@ -982,8 +956,36 @@ select> """)
                 time.sleep( sleep_time * 2 )
             else:
                 print('do not understand command')
-                
 
+def edit_attributes( char ):
+    print( 'not yet' )
+    time.sleep( sleep_time * 2 )
+                
+def edit_character():
+    while True:
+        name = SubMenu( sorted([r.data['name'] for r in roster]), 'Edit which character?', exit=False, default=None, custom=False )
+        if not name:
+            return
+
+        char = get_character_for_name( name )
+        if not char:
+            print( '{} not found!'.format(name) )
+            continue
+
+        actions = [
+            'Attributes',
+            'Inventory'
+        ]
+        act = SubMenu( actions, 'Editing "{}", Which would you like to edit?'.format(name) )
+        if act is None:
+            return
+        if not act:
+            continue
+
+        if act == 'Attributes':
+            edit_attributes( char )
+        elif act == 'Inventory':
+            edit_inventory( char )
 
 ##################################################################
 #
