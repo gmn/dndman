@@ -59,15 +59,14 @@ equipment = {}
 character = {}
 world = {}
 
-menu = """First Edition Dungeons & Dragons Character Management Tool.
+main_menu_string = """First Edition Dungeons & Dragons Character Management Tool.
 Options are:
  (L) List Characters
- (E) Edit a Character
  (C) Create a New Character
- (S) Shop at the Store
- (G) Randomly Generate Character
+ (E) Edit a Character
+ (G) Generate Character Randomly
  (D) Delete a Character
- (R) Configure Roll Methods
+ (R) Roll Methods
  (Q) Quit
 Your Selection> """
 
@@ -75,6 +74,10 @@ Your Selection> """
 
 ##################################################################
 # METHODS & CLASSES
+def vowel( l ):
+    l = l.replace(' ','').lower()
+    return l == 'a' or l == 'e' or l == 'i' or l == 'o' or l == 'u'
+
 def dprint( s ):
     if DEBUG is True:
         print( 'DEBUG: {}'.format(s) )
@@ -232,25 +235,34 @@ class RandomDiceRoller:
         return s.dn(20)
     def d100(s):
         return s.dn(100)
-    def xdx( self, idi ): # takes a string in the format <int>d<int>, eg. 3d6, 6d4,
+
+    def xdx( self, idi, separate=False ): # takes a string in the format <int>d<int>, eg. 3d6, 6d4,
         nums = idi.split('d')
         if not nums[0]:
             nums[0] = 1
-        i = 0
-        t = 0
+
+        t = []
         d = int(nums[1])
-        while i < int(nums[0]):
-            t = t + self.dn( d )
-            i = i + 1
-        return t
+        for _ in range( int(nums[0]) ):
+            t.append( self.dn( d ) )
+
+        return t if separate else sum(t)
 
     def roll( self, inp ): # computes string of N rolls of xdx joined by '+'. Can also do XDX + CONST
-        total = 0
+        drop_lowest = False
+        if 'drop lowest' in inp:
+            drop_lowest = True
+            inp = inp.replace('drop lowest','')
+
         rolls = inp.replace(' ','').split('+')
+        dice_totals = []
         for roll in rolls:
-            val = self.xdx( roll ) if 'd' in roll else int(roll)
-            total = total + val
-        return total
+            val = self.xdx( roll, separate=True ) if 'd' in roll else int(roll)
+            dice_totals.extend(val)
+
+        if drop_lowest:
+            dice_totals.remove( min(dice_totals) )
+        return sum(dice_totals)
 
     def mult( self, inp ): # expects the form: "xdx x INT"
         rolls = inp.replace(' ','').split('x')
@@ -396,7 +408,7 @@ def load_roster():
             roster.append( CharacterSheet( json.load(f) ) )
 
 
-def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False, default=False ):
+def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False, default=False, exit=True, quit=True ):
     """ takes a list,
         X prints a header
         X prints an arbitary length list of options
@@ -419,8 +431,11 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
             if type(option) is type({}):
                 option = fmt_item( option )
             print( ' {}: "{}"'.format(i, option) )
-        print( '\n e] exit to previous menu' )
-        print( ' q] quit to main menu' )
+        print( '' )
+        if exit:
+            print( ' e] exit to previous menu' )
+        if quit:
+            print( ' q] quit to main menu' )
         if custom:
             print( ' c] enter custom type' )
 
@@ -826,7 +841,7 @@ def configure_rolling_method():
     def print_menu():
         print( 'stored attribute rolling methods:' )
         for i, r in enumerate(config['rolls']):
-            d = 'default' if i == config['default_attrib_roll_method'] else ''
+            d = '-' * 10 + 'default' if i == config['default_attrib_roll_method'] else ''
             print( " {}: '{}' {}".format( i, r, d ) )
         print( '\n n] add a new method' )
         print( ' d] delete a method' )
@@ -838,10 +853,11 @@ def configure_rolling_method():
             break
         print_menu()
         o = input( 'select> ' )
-        if o == 'e':
+        if o == 'e' or o == 'q':
             break
         if o == 'n':
-            m = input( 'new roll method: ' )
+            print( 'Add New roll method.\nCan be of the types: "d20", "2d4", "3d6 + 10", "2d4 + 3d12", or "4d6 drop lowest"' )
+            m = input( 'enter method> ' )
             config['rolls'].append(m)
             write_config()
         elif o == 'd':
@@ -900,6 +916,75 @@ def check_cmdline_args():
                 print( 'invalid argument' )
                 sys.exit(-2)
 
+def edit_character():
+    while True:
+        name = SubMenu( [r.data['name'] for r in roster], 'Edit which character?', exit=False, default=None )
+        if not name:
+            return
+
+        char = get_character_for_name( name )
+        if not char:
+            print( '{} not found!'.format(name) )
+            continue
+
+        while True:
+            print( '\nEditing: "{}"'.format(char['name']) )
+            if char['inventory']:
+                print( ' inventory:')
+                for index, item in enumerate(char['inventory']):
+                    if type(item) is type({}):
+                        item = fmt_item( item )
+                    print( ' {}: {}'.format( index, item ) )
+            else:
+                print('* no items *')
+
+            ans = input("""
+ n) add new item
+ s) Shop at The Players Handbook store
+ d) delete item
+ q) quit to previous menu
+select> """)
+
+            if ans == 'q':
+                break
+
+            if ans == 's':
+                shop_at_the_store()
+
+            elif ans == 'n':
+                while True:
+                    item = input( 'Enter Item: ' )
+                    if not item:
+                        print('bad input (q to quit)')
+                        continue
+                    if item.lower() == 'q':
+                        break
+                    char['inventory'].append(item)
+                    print( '\n"{}" gets {} "{}"'.format(name, 'an' if vowel(item[0]) else 'a', item) )
+                    time.sleep( sleep_time * 2 )
+                    break
+
+            elif ans == 'd':
+                index = getint( 'delete which> ' )
+                if index is False:
+                    print( 'skipping' )
+                    continue
+                if index < 0 or index >= len(char['inventory']):
+                    print( 'invalid selection' )
+                    time.sleep( sleep_time )
+                    continue
+                item = char['inventory'][index]
+                if type(item) is type({}):
+                    item = [k for k in item.keys()][0]
+                char.data['inventory'] = char['inventory'][:index] + char['inventory'][index+1:]
+                char.save()
+                print( '\n"{}" dropped "{}"'.format( char['name'], item ) )
+                time.sleep( sleep_time * 2 )
+            else:
+                print('do not understand command')
+                
+
+
 ##################################################################
 #
 # entry point
@@ -915,13 +1000,16 @@ if check_cmdline_args():
 
 op = ''
 while op != 'q' and op != 'Q':
-    op = input( menu )
-    if op == 'L' or op == 'l':                      # list
-        list_characters()
-    elif op == 'E' or op == 'e':                    # edit
-        print( 'Not Implemented' )
 
-    elif op == 'C' or op == 'c':                    # create
+    op = input( main_menu_string )
+
+    if op.upper() == 'L':                      # list
+        list_characters()
+
+    elif op.upper() == 'E':                    # edit character
+        edit_character()
+
+    elif op.upper() == 'C':                    # create
         print( 'Creating a Player Character' )
         char = create_character()
         if char:
@@ -931,10 +1019,7 @@ while op != 'q' and op != 'Q':
             print('')
             time.sleep( sleep_time * 2 )
 
-    elif op.upper() == 'S':                         # shop
-        shop_at_the_store()
-
-    elif op == 'G' or op == 'g':                    # generate
+    elif op.upper() == 'G':                    # generate
         print( 'Generating a Player Character' )
         char = autogen_character()
         char.print()
@@ -942,14 +1027,15 @@ while op != 'q' and op != 'Q':
         if ans:
             char.save()
 
-    elif op == 'd' or op == 'D':                    # delete
+    elif op.upper() == 'D':                    # delete
         delete_character_menu()
 
-    elif op == 'R' or op == 'r':                    # rolling method
+    elif op.upper() == 'R':                    # rolling method
         configure_rolling_method()
 
-    elif op == 'Q' or op == 'q':                    # quit
+    elif op.upper() == 'Q':                    # quit
         break
+
     else:
         print( "Command Unknown" )
 
