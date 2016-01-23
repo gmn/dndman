@@ -473,7 +473,7 @@ def create_character():
 
     # NAME
     while True:
-        ans = input( "What is your character's name ('q' to quit)? " )
+        ans = input( "What is your character's name? " )
         if not ans:
             print( "empty string invalid" )
             continue
@@ -496,7 +496,13 @@ def create_character():
         elif not auto_roll:
             print( "Enter Attributes Manually:" )
             for a in attribs_ordered:
-                attribs[a] = getint( " Enter {} ? ".format(a.upper()) )
+                while True:
+                    atr = getint( "-Enter {} ? ".format(a.upper()) )
+                    if not atr:
+                        print( "Bad value. Integer only." )
+                        continue
+                    attribs[a] = atr
+                    break
             ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ), 'y' )
             if ans is None:
                 return False
@@ -599,6 +605,7 @@ def create_character():
 
     # HIT_POINTS (roll hit dice)
     while True:
+        done = False
         print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
         manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?', 'y' )
         if manual_enter_hp is None:
@@ -614,46 +621,65 @@ def create_character():
                 d['hp'] = hp
                 break
         else:
-            hp = []
-            hp.append( dice.roll( d['SHD'] ) )
-            i = 1
-            while i < d['level']:
-                hp.append( dice.roll( d['HD'] ) )
-                i = i + 1
-            print( 'rolled: ', end='' )
-            for h in hp[:-1]:
-                print( str(h) + ' +', end=' ' )
-            print( '{} = {}'.format( str(hp[-1]), sum(hp) ) )
-            ans = ynq( 'keep?', 'y' )
-            if ans is None:
-                return False
-            if ans:
-                d['hp'] = sum(hp)
+            while True:
+                hp = []
+                hp.append( dice.roll( d['SHD'] ) )
+                i = 1
+                while i < d['level']:
+                    hp.append( dice.roll( d['HD'] ) )
+                    i = i + 1
+                print( 'rolled: ', end='' )
+                for h in hp[:-1]:
+                    print( str(h) + ' +', end=' ' )
+                print( '{} = {}'.format( str(hp[-1]), sum(hp) ) )
+                ans = ynq( 'keep?', 'y' )
+                if ans is None:
+                    break # here we exit to the higher loop
+                if ans:
+                    d['hp'] = sum(hp)
+                    done = True
+                    break
+            if done:
                 break
     print( '{} has {} hit points'.format( d['class'], d['hp'] ), end='\n\n' )
     time.sleep( sleep_time )
 
     # AGE
     # sub Dwarf for non-standard character race
-    ans = ynq( 'Would you like {}\'s age rolled for you?'.format(d['name']), 'y' )
-    if ans:
-        race = d['race'] if d['race'] in character['races'] else 'Dwarf'
-        # use Cleric as default for non-book classes
-        className = d['class'] if d['class'] in character['classes'] else 'Cleric'
-        if race != 'Human':
-            # demi-humans only have tables by super-class
-            className = character['subclass-membership'][ className ]
-        dieroll = character['starting-age'][race][className]
-        while True:
-            years = dice.roll( dieroll )
-            ans = ynq( 'An {} rolls "{}" for {} years starting age, keep?'.format(d['race'], dieroll, years ), 'y' )
-            if ans is None:
-                return
-            if ans:
-                d['age'] = years
+    while True:
+        done = False
+        ans = ynq( 'Would you like {}\'s age rolled for you?'.format(d['name']), 'y' )
+        if ans is None:
+            return False
+        if not ans:
+            age = getint( 'Enter {}\'s age in years? '.format(d['name']) )
+            if not age:
+                continue
+            keep = ynq( 'got {} years of age, keep?'.format(age) )
+            if keep is None:
+                return False
+            elif keep:
+                d['age'] = age
                 break
-    else:
-        d['age'] = getint( 'Enter {}\'s age in years? '.format(d['name']) )
+        else:
+            race = d['race'] if d['race'] in character['races'] else 'Dwarf'
+            # use Cleric as default for non-book classes
+            className = d['class'] if d['class'] in character['classes'] else 'Cleric'
+            if race != 'Human':
+                # demi-humans only have tables by super-class
+                className = character['subclass-membership'][ className ]
+            dieroll = character['starting-age'][race][className]
+            while True:
+                years = dice.roll( dieroll )
+                ans = ynq( 'An {} rolls "{}" for {} years starting age, keep?'.format(d['race'], dieroll, years ), 'y' )
+                if ans is None:
+                    break # quit upwards to higher loop
+                if ans:
+                    d['age'] = years
+                    done = True
+                    break
+            if done:
+                break
     print( 'character is {} years old'.format( d['age'] ), end='\n\n' )
     time.sleep( sleep_time )
 
