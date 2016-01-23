@@ -4,9 +4,11 @@ import random
 import os
 import time
 import sys
+import datetime
 
 ##################################################################
 # CONFIG, GLOBALS
+messages = []
 attribs_ordered = ('str','int','wis','dex','con','chr')
 default_character = {   'attribs':{},
                         'name':'Default Name',
@@ -35,25 +37,32 @@ default_character = {   'attribs':{},
                         'SHD' : '1d6',
                     }
 
+# directories
 if os.name == 'nt':
     datadir = os.environ['LOCALAPPDATA' if os.name == 'nt' else 'HOME'] + '\\dnd'
 else:
     datadir = os.environ['LOCALAPPDATA' if os.name == 'nt' else 'HOME'] + '/.dnd'
+logfile_path = datadir + '/dndman.log'
+log_fh = False
 
 roster = []
 DEBUG = True
 config = {}
 sleep_time = 0.45
+msg_time = 0.6
 defconfig = """{
     "rolls" : [
         "3d6",
         "1d12 + 6",
-        "2d6 + 6"
+        "2d6 + 6",
+        "4d6 drop lowest"
     ],
     "default_attrib_roll_method" : 0,
-    "sleep_time": 0.4
+    "sleep_time": 0.45,
+    "msg_time" : 0.6
 }
 """
+
 # data sheets to load
 equipment = {}
 character = {}
@@ -74,6 +83,25 @@ Your Selection> """
 
 ##################################################################
 # METHODS & CLASSES
+def timestamp():
+    return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
+def open_logfile():
+    global log_fh
+    log_fh = open( logfile_path, 'a' )
+
+def log( msg ):
+    log_fh.write( msg )
+
+def Message( s ):
+    s = s.rstrip().lstrip()
+    fmt = {'ts': timestamp(), 'msg': s} 
+    global messages
+    messages.append( fmt )
+    print( '\n -> {}\n'.format(s) )
+    log( json.dumps(fmt) )
+    time.sleep( msg_time )
+
 def vowel( l ):
     l = l.replace(' ','').lower()
     return l == 'a' or l == 'e' or l == 'i' or l == 'o' or l == 'u'
@@ -134,7 +162,7 @@ def money_toString( o ):
     s = s.rstrip()
     if s[-1] == ',':
         s = s[:-1]
-    s = s + ') = {}'
+    s = s + ') = {}gp'
     return s.format(frac_coin(o))
 
 class Money:
@@ -258,7 +286,10 @@ class RandomDiceRoller:
         dice_totals = []
         for roll in rolls:
             val = self.xdx( roll, separate=True ) if 'd' in roll else int(roll)
-            dice_totals.extend(val)
+            if type(val) is int:
+                dice_totals.append(val)
+            else:
+                dice_totals.extend(val)
 
         if drop_lowest:
             dice_totals.remove( min(dice_totals) )
@@ -392,9 +423,11 @@ def ensure_datadir():
 def read_config():
     global config
     global sleep_time
+    global msg_time
     with open( datadir + '/config', 'r' ) as f:
         config = json.loads(f.read())
     sleep_time = config.get('sleep_time', sleep_time)
+    msg_time = config.get('msg_time', msg_time)
 
 def write_config():
     with open( datadir + '/config', 'w' ) as f:
@@ -500,8 +533,7 @@ def create_character():
         elif hmm:
             break
     char.data['name'] = ans
-    print( 'Name: "{}"'.format(d['name']), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( 'Name: "{}"'.format(d['name']) )
 
     # ATTRIBUTES
     while True:
@@ -534,8 +566,7 @@ def create_character():
                 return False
             elif ans:
                 break
-    print( 'Character has attributes: {}'.format( fmt_attrib( attribs ) ) )
-    time.sleep( sleep_time )
+    Message( 'Character has attributes: {}'.format( fmt_attrib( attribs ) ) )
 
     # RACE
     while True:
@@ -549,8 +580,7 @@ def create_character():
             elif keep:
                 break
     d['race'] = ans
-    print( 'Race is: "{}"'.format( d['race'] ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( 'Race is: "{}"'.format( d['race'] ) )
 
     # SEX
     while True:
@@ -564,8 +594,7 @@ def create_character():
             elif keep:
                 break
     d['sex'] = ans
-    print( 'got sex: "{}"'.format( d['sex'] ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( 'got sex: "{}"'.format( d['sex'] ) )
 
     # ALIGNMENT
     while True:
@@ -579,8 +608,7 @@ def create_character():
             elif keep:
                 break
     d['alignment'] = ans
-    print( 'got alignment: "{}"'.format( d['alignment'] ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( 'got alignment: "{}"'.format( d['alignment'] ) )
 
     # CLASS
     while True:
@@ -594,8 +622,7 @@ def create_character():
             elif keep:
                 break
     d['class'] = ans
-    print( 'got class: "{}"'.format( d['class'] ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( 'got class: "{}"'.format( d['class'] ) )
 
     # ENTER LEVEL
     while True:
@@ -608,8 +635,7 @@ def create_character():
         elif keep:
             break
     d['level'] = ans
-    print( '{} is "{} level"'.format( d['name'], number_end( d['level'] ) ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( '{} is "{} level"'.format( d['name'], number_end( d['level'] ) ) )
 
     # DETERMINE HIT_DICE (manual only for custom class)
     if d['class'] in character['classes']:
@@ -656,8 +682,7 @@ def create_character():
                     break
             if done:
                 break
-    print( '{} has {} hit points'.format( d['class'], d['hp'] ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( '{} has {} hit points'.format( d['class'], d['hp'] ) )
 
     # AGE
     # sub Dwarf for non-standard character race
@@ -695,9 +720,7 @@ def create_character():
                     break
             if done:
                 break
-    print( 'character is {} years old'.format( d['age'] ), end='\n\n' )
-    time.sleep( sleep_time )
-
+    Message( 'character is {} years old'.format( d['age'] ) )
 
     # STARTING MONEY
     ca = character['classes'][ d['class'] ]
@@ -709,8 +732,7 @@ def create_character():
         if ans:
             d['money'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
             break
-    print( 'character got {} gp'.format( gp ), end='\n\n' )
-    time.sleep( sleep_time )
+    Message( 'character got {} gp'.format( gp ) )
 
 
     # WEAPON PROFICIENCIES
@@ -745,8 +767,9 @@ def create_character():
     # GEAR WEIGHT (calculated on equip automatically)
     # BASE MOVEMENT RATE (calculated on gear weight change)
     #--------------------
+    char.save()
+    Message('Congratulations, you have created:\n{}'.format( char.toString() ) ) 
     return char
-
 
 def autogen_character():
     """this creates an entire character, completely randomly, including name"""
@@ -760,7 +783,7 @@ def autogen_character():
 
 def shop_at_the_store( char ):
     while True:
-        print( '{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
+        print( '\n{} has {}'.format( char['name'], money_toString( char['money'] ) ) )
         etype = SubMenu( sorted(equipment.keys()), 'What category would you like to peruse?', custom=False )
         if etype is None:
             return
@@ -789,8 +812,7 @@ def shop_at_the_store( char ):
                 char.data['money'] = change
                 char['inventory'].append(item)
                 char.save()
-                print( '\nYou bought a "{}"!\n'.format( item_name ) )
-                print( 'Change left: '.format( money_toString(change) ) )
+                Message( 'You bought a "{}"!\nCoins remaining: {}'.format( item_name, money_toString(change) ) )
             elif item is None:
                 return
             else:
@@ -882,8 +904,7 @@ def list_characters():
         print( '\n  no characters\n' )
         time.sleep( sleep_time * 2 )
     for i, c in enumerate(roster):
-        print( '{}: '.format(i), end='' )
-        c.print()
+        print( ' {}: {}'.format(i, c.toString()) )
 
 def check_cmdline_args():
     args = sys.argv[1:]
@@ -909,17 +930,16 @@ def check_cmdline_args():
 
 def edit_inventory( char ):
         while True:
-            print( '\nEditing: "{}"'.format(char['name']) )
+            print( '\nEditing: "{}", Inventory:'.format(char['name']) )
             if char['inventory']:
-                print( ' inventory:')
                 for index, item in enumerate(char['inventory']):
                     if type(item) is type({}):
                         item = fmt_item( item )
                     print( ' {}: {}'.format( index, item ) )
             else:
-                print('* no items *')
+                print('* no items')
 
-            ans = input("""\nn) add new item\ns) Shop at The Players Handbook store\nd) delete item\nq) quit to previous menu\nselect> """)
+            ans = input("""\n A)dd new item\n S)hop at The Players Handbook Store\n D)elete item\n Q)uit to previous menu\nselect> """)
             if ans == 'q':
                 break
             elif ans == 's':
@@ -929,22 +949,21 @@ def edit_inventory( char ):
                 while True:
                     item = input( 'Enter Item: ' )
                     if not item:
-                        print('bad input (q to quit)')
+                        print('\nbad input (q to quit)')
                         continue
                     if item.lower() == 'q':
                         break
                     char['inventory'].append(item)
-                    print( '\n"{}" gets {} "{}"'.format(char['name'], 'an' if vowel(item[0]) else 'a', item) )
-                    time.sleep( sleep_time * 2 )
+                    Message( '"{}" gets {} "{}"'.format(char['name'], 'an' if vowel(item[0]) else 'a', item) )
                     break
 
             elif ans == 'd':
                 index = getint( 'delete which> ' )
                 if index is False:
-                    print( 'skipping' )
+                    print( '\nskipping' )
                     continue
                 if index < 0 or index >= len(char['inventory']):
-                    print( 'invalid selection' )
+                    print( '\ninvalid selection' )
                     time.sleep( sleep_time )
                     continue
                 item = char['inventory'][index]
@@ -952,33 +971,30 @@ def edit_inventory( char ):
                     item = [k for k in item.keys()][0]
                 char.data['inventory'] = char['inventory'][:index] + char['inventory'][index+1:]
                 char.save()
-                print( '\n"{}" dropped "{}"'.format( char['name'], item ) )
-                time.sleep( sleep_time * 2 )
+                Message( '"{}" dropped "{}"'.format( char['name'], item ) )
             else:
-                print('do not understand command')
+                print('\ndo not understand command')
 
 def edit_attributes( char ):
-    print( 'not yet' )
-    time.sleep( sleep_time * 2 )
+    print( '\nnot yet' )
+    time.sleep( sleep_time )
                 
 def edit_character():
     while True:
-        name = SubMenu( sorted([r.data['name'] for r in roster]), 'Edit which character?', exit=False, default=None, custom=False )
+        name = SubMenu( sorted([r.data['name'] for r in roster]), '\nEdit which character?', exit=False, default=None, custom=False )
         if not name:
             return
 
         char = get_character_for_name( name )
         if not char:
-            print( '{} not found!'.format(name) )
+            print( '\n{} not found!'.format(name) )
             continue
 
         actions = [
             'Attributes',
             'Inventory'
         ]
-        act = SubMenu( actions, 'Editing "{}", Which would you like to edit?'.format(name) )
-        if act is None:
-            return
+        act = SubMenu( actions, '\nEditing "{}". Which category?'.format(name) )
         if not act:
             continue
 
@@ -996,6 +1012,7 @@ ensure_datadir()
 read_config()
 load_roster()
 load_data()
+open_logfile()
 
 if check_cmdline_args():
     sys.exit(0)
@@ -1014,12 +1031,6 @@ while op != 'q' and op != 'Q':
     elif op.upper() == 'C':                    # create
         print( 'Creating a Player Character' )
         char = create_character()
-        if char:
-            char.save()
-            print('\nCongratulations, you have created:\n  ')
-            char.print()
-            print('')
-            time.sleep( sleep_time * 2 )
 
     elif op.upper() == 'G':                    # generate
         print( 'Generating a Player Character' )
@@ -1041,5 +1052,6 @@ while op != 'q' and op != 'Q':
     else:
         print( "Command Unknown" )
 
+log_fh.close()
 print( 'goodbye' )
 
