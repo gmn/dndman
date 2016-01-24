@@ -95,7 +95,7 @@ def log( msg ):
 
 def Message( s ):
     s = s.rstrip().lstrip()
-    fmt = {'ts': timestamp(), 'msg': s} 
+    fmt = {'ts': timestamp(), 'msg': s}
     global messages
     messages.append( fmt )
     print( '\n -> {}\n'.format(s) )
@@ -466,11 +466,11 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
             print( ' {}: "{}"'.format(i, option) )
         print( '' )
         if exit:
-            print( ' e] exit to previous menu' )
+            print( ' E) exit to previous menu' )
         if quit:
-            print( ' q] quit to main menu' )
+            print( ' Q) quit to the previous menu' )
         if custom:
-            print( ' c] enter custom type' )
+            print( ' C] enter custom type' )
 
         prompt = prompt.rstrip()
         if default:
@@ -624,7 +624,7 @@ def create_character():
     d['class'] = ans
     Message( 'got class: "{}"'.format( d['class'] ) )
 
-    # ENTER LEVEL
+    # LEVEL
     while True:
         ans = getint( 'What level is "{}" (default: 1)> '.format(d['name']) )
         if ans is False:
@@ -637,7 +637,7 @@ def create_character():
     d['level'] = ans
     Message( '{} is "{} level"'.format( d['name'], number_end( d['level'] ) ) )
 
-    # DETERMINE HIT_DICE (manual only for custom class)
+    # HIT_DICE (manual only for custom class)
     if d['class'] in character['classes']:
         d['HD'] = character['classes'][ d['class'] ]['HD']
         d['SHD'] = character['classes'][ d['class'] ]['SHD']
@@ -741,7 +741,7 @@ def create_character():
     # KNOWN SPELLS
     #   calculate/allot spells/choose from PHB
 
-    # SELECT GOD
+    # SELECT DIETY
     #   write-in for now
 
     # HEIGHT & WEIGHT
@@ -768,7 +768,7 @@ def create_character():
     # BASE MOVEMENT RATE (calculated on gear weight change)
     #--------------------
     char.save()
-    Message('Congratulations, you have created:\n{}'.format( char.toString() ) ) 
+    Message('Congratulations, you have created:\n{}'.format( char.toString() ) )
     return char
 
 def autogen_character():
@@ -793,7 +793,7 @@ def shop_at_the_store( char ):
         while True:
             player_money = '{} has {}'.format( char['name'], money_toString( char['money'] ) )
             #item_name = SubMenu( sorted(equipment[etype].keys()), player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
-            item = SubMenu( [{ k: v } for k, v in equipment[etype].items()], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
+            item = SubMenu( [{ k: v } for k, v in equipment[etype].items()], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False, exit=False )
             if item:
                 item_name = [k for k in item.keys()][0]
                 subitem = item[item_name]
@@ -929,56 +929,78 @@ def check_cmdline_args():
                 sys.exit(-2)
 
 def edit_inventory( char ):
-        while True:
-            print( '\nEditing: "{}", Inventory:'.format(char['name']) )
-            if char['inventory']:
-                for index, item in enumerate(char['inventory']):
-                    if type(item) is type({}):
-                        item = fmt_item( item )
-                    print( ' {}: {}'.format( index, item ) )
-            else:
-                print('* no items')
-
-            ans = input("""\n A)dd new item\n S)hop at The Players Handbook Store\n D)elete item\n Q)uit to previous menu\nselect> """)
-            if ans == 'q':
-                break
-            elif ans == 's':
-                shop_at_the_store( char )
-
-            elif ans == 'n':
-                while True:
-                    item = input( 'Enter Item: ' )
-                    if not item:
-                        print('\nbad input (q to quit)')
-                        continue
-                    if item.lower() == 'q':
-                        break
-                    char['inventory'].append(item)
-                    Message( '"{}" gets {} "{}"'.format(char['name'], 'an' if vowel(item[0]) else 'a', item) )
-                    break
-
-            elif ans == 'd':
-                index = getint( 'delete which> ' )
-                if index is False:
-                    print( '\nskipping' )
-                    continue
-                if index < 0 or index >= len(char['inventory']):
-                    print( '\ninvalid selection' )
-                    time.sleep( sleep_time )
-                    continue
-                item = char['inventory'][index]
+    while True:
+        print( '\nEditing: "{}", Inventory:'.format(char['name']) )
+        if char['inventory']:
+            for index, item in enumerate(char['inventory']):
                 if type(item) is type({}):
-                    item = [k for k in item.keys()][0]
-                char.data['inventory'] = char['inventory'][:index] + char['inventory'][index+1:]
+                    item = fmt_item( item )
+                print( ' {}: {}'.format( index, item ) )
+        else:
+            print('* no items')
+
+        ans = input("""\n A)dd new item\n S)hop at The Players Handbook Store\n D)elete item\n Q)uit to previous menu\nselect> """)
+        if ans.lower() == 'q':
+            break
+        elif ans.lower() == 's':
+            shop_at_the_store( char )
+
+        elif ans.lower() == 'a':
+            while True:
+                item = input( 'Enter Item: ' )
+                if not item:
+                    print('\nbad input (q to quit)')
+                    continue
+                if item.lower() == 'q':
+                    break
+                char['inventory'].append(item)
                 char.save()
-                Message( '"{}" dropped "{}"'.format( char['name'], item ) )
-            else:
-                print('\ndo not understand command')
+                Message( '"{}" gets {} "{}"'.format(char['name'], 'an' if vowel(item[0]) else 'a', item) )
+                break
+
+        elif ans.lower() == 'd':
+            index = getint( 'delete which> ' )
+            if index is False:
+                print( '\nskipping' )
+                continue
+            if index < 0 or index >= len(char['inventory']):
+                print( '\ninvalid selection' )
+                time.sleep( sleep_time )
+                continue
+            item = char['inventory'][index]
+            if type(item) is type({}):
+                item = [k for k in item.keys()][0]
+            char.data['inventory'] = char['inventory'][:index] + char['inventory'][index+1:]
+            char.save()
+            Message( '"{}" dropped "{}"'.format( char['name'], item ) )
+        else:
+            print('\ndo not understand command')
 
 def edit_attributes( char ):
     print( '\nnot yet' )
     time.sleep( sleep_time )
-                
+    # NAME
+    # ATTRIBUTES
+    # RACE
+    # SEX
+    # ALIGNMENT
+    # CLASS
+    # LEVEL
+    # HIT_DICE
+    # HIT_POINTS
+    # AGE
+    # STARTING_MONEY
+    # WEAPON_PROFICIENCIES
+    # KNOWN_SPELLS
+    # DIETY
+    # HEIGHT
+    # WEIGHT
+    # LANGUAGES
+    # NON WEAPON PROFICIENCIES
+    # FAMILY BACKGROUND
+    # NEXT OF KIN
+    # HOME CITY
+
 def edit_character():
     while True:
         name = SubMenu( sorted([r.data['name'] for r in roster]), '\nEdit which character?', exit=False, default=None, custom=False )
@@ -990,18 +1012,21 @@ def edit_character():
             print( '\n{} not found!'.format(name) )
             continue
 
-        actions = [
-            'Attributes',
-            'Inventory'
-        ]
-        act = SubMenu( actions, '\nEditing "{}". Which category?'.format(name) )
-        if not act:
-            continue
+        while True:
+            actions = [
+                'Attributes',
+                'Inventory'
+            ]
+            act = SubMenu( actions, '\nEditing "{}". Which category?'.format(name) )
+            if act is None:
+                return
+            if not act:
+                break
 
-        if act == 'Attributes':
-            edit_attributes( char )
-        elif act == 'Inventory':
-            edit_inventory( char )
+            if act == 'Attributes':
+                edit_attributes( char )
+            elif act == 'Inventory':
+                edit_inventory( char )
 
 ##################################################################
 #
