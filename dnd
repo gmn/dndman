@@ -229,7 +229,7 @@ def list_dir(d):
     _ld(d,files)
     return sorted(files)
 
-def get_character_for_name( name ):
+def char_for_name( name ):
     for r in roster:
         if r.data['name'] == name:
             return r
@@ -276,7 +276,7 @@ class RandomDiceRoller:
 
         return t if separate else sum(t)
 
-    def roll( self, inp ): # computes string of N rolls of xdx joined by '+'. Can also do XDX + CONST
+    def roll( self, inp, separate=False ): # computes string of N rolls of xdx joined by '+'. Can also do XDX + CONST
         drop_lowest = False
         if 'drop lowest' in inp:
             drop_lowest = True
@@ -290,16 +290,17 @@ class RandomDiceRoller:
                 dice_totals.append(val)
             else:
                 dice_totals.extend(val)
-
         if drop_lowest:
             dice_totals.remove( min(dice_totals) )
-        return sum(dice_totals)
+        return dice_totals if separate else sum(dice_totals)
 
-    def mult( self, inp ): # expects the form: "xdx x INT"
-        rolls = inp.replace(' ','').split('x')
-        total = self.xdx( rolls[0] )
-        total = total * int(rolls[1])
-        return total
+    def mult( self, inp ): # Expects the strict form: "XdX x INTEGER"
+        try:
+            rolls = inp.replace(' ','').split('x')
+            return self.xdx( rolls[0] ) * int( rolls[1] )
+        except:
+            print( 'dice.mult() Expects the strict form: "XdX x INTEGER"' )
+            raise
 
 
 class RollingChart:
@@ -315,9 +316,13 @@ def getint( text ):
     except:
         return False
 
-def yn( text ):
-    val = input( '{} [y/N]: '.format(text) )
-    return val == 'y' or val == 'Y'
+def yn( text, default_action='n' ):
+    suffixen = {'y':'[Y/n]','n':'[y/N]'}
+    val = input( '{} {}: '.format(text,suffixen[default_action]) )
+    if default_action.lower() == 'y':
+        return val.upper() == 'N'
+    else:
+        return val.upper() == 'Y'
 
 def ynq( text, default_action='n' ):
     suffix = '[';
@@ -333,9 +338,9 @@ def ynq( text, default_action='n' ):
     if not val or len(val) == 0:
         return {'y':True,'n':False,'q':None}.get(default_action.lower(),False)
 
-    if val == 'Q' or val == 'q':
+    if val.upper() == 'Q':
         return None
-    return val == 'y' or val == 'Y'
+    return val.upper() == 'Y'
 
 def fmt_attrib( attribs ):
     s = ''
@@ -521,12 +526,17 @@ def create_character():
 
     # NAME
     while True:
-        ans = input( "What is your character's name? " )
+        ans = input( "What is your character's NAME? " )
         if not ans:
             print( "empty string invalid" )
             continue
         elif ans == 'q':
             return False
+        existingChar = char_for_name( ans )
+        if existingChar is not False:
+            hmm = yn( '"{}" exists already. Overwrite?'.format(ans) )
+            if not hmm:
+                continue
         hmm = ynq( 'Character\'s Name is: "{}", keep? '.format(ans), 'y' )
         if hmm is None:
             return False
@@ -537,7 +547,7 @@ def create_character():
 
     # ATTRIBUTES
     while True:
-        auto_roll = ynq( 'Would you like your attributes to be rolled for you?', 'y' )
+        auto_roll = ynq( 'Would you like your ATTRIBUTES to be rolled for you?', 'y' )
         if auto_roll is None:
             return
         elif not auto_roll:
@@ -557,7 +567,7 @@ def create_character():
                 break
         else:
             roll_method = config['rolls'][ config['default_attrib_roll_method'] ]
-            print( 'Rolling automatically using dice method: "{}"'.format( roll_method ) )
+            print( 'Using dice method: "{}"'.format( roll_method ) )
             for a in attribs_ordered:
                 attribs[a] = dice.roll( roll_method )
             print( 'rolled: {}'.format( fmt_attrib( attribs ) ) )
@@ -570,7 +580,7 @@ def create_character():
 
     # RACE
     while True:
-        ans = SubMenu( list( character['races'].keys() ), "Select a race: ", custom=True, default='Human' )
+        ans = SubMenu( list( character['races'].keys() ), "Select a RACE: ", custom=True, default='Human' )
         if ans is None:
             return False
         if ans:
@@ -584,7 +594,7 @@ def create_character():
 
     # SEX
     while True:
-        ans = SubMenu( ['Male', 'Female'], 'What Sex are They?', custom=True, default='Male' )
+        ans = SubMenu( ['Male', 'Female'], 'What SEX is "{}"?'.format(d['name']), custom=True, default='Male' )
         if ans is None:
             return False
         if ans:
@@ -598,7 +608,7 @@ def create_character():
 
     # ALIGNMENT
     while True:
-        ans = SubMenu( character['alignments'], 'What Alignment is "{}"? '.format(d['name']), custom=True, default='Neutral Good' )
+        ans = SubMenu( character['alignments'], 'What ALIGNMENT is "{}"? '.format(d['name']), custom=True, default='Neutral Good' )
         if ans is None:
             return False
         if ans:
@@ -612,7 +622,7 @@ def create_character():
 
     # CLASS
     while True:
-        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'select a class', custom=True )
+        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'Select a CLASS', custom=True )
         if ans is None:
             return False
         if ans:
@@ -626,7 +636,7 @@ def create_character():
 
     # LEVEL
     while True:
-        ans = getint( 'What level is "{}" (default: 1)> '.format(d['name']) )
+        ans = getint( 'What LEVEL is "{}" (default: 1)> '.format(d['name']) )
         if ans is False:
             ans = 1
         keep = ynq( 'selected: "{} Level", keep?'.format( number_end(ans) ), 'y' )
@@ -648,10 +658,10 @@ def create_character():
     while True:
         done = False
         print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
-        manual_enter_hp = not ynq( 'Would you like your hit-points to be rolled for you?', 'y' )
-        if manual_enter_hp is None:
+        autoroll_hp = ynq( 'Would you like your HIT POINTS to be rolled for you?', 'y' )
+        if autoroll_hp is None:
             return False
-        if manual_enter_hp:
+        if not autoroll_hp:
             hp = getint( 'enter hitpoints> ' )
             if not hp:
                 continue
@@ -664,9 +674,9 @@ def create_character():
         else:
             while True:
                 hp = []
-                hp.append( dice.roll( d['SHD'] ) )
-                i = 1
-                while i < d['level']:
+                hp.extend( dice.roll( d['SHD'], separate=True ) )
+                i = 2
+                while i <= d['level']:
                     hp.append( dice.roll( d['HD'] ) )
                     i = i + 1
                 print( 'rolled: ', end='' )
@@ -688,14 +698,14 @@ def create_character():
     # sub Dwarf for non-standard character race
     while True:
         done = False
-        ans = ynq( 'Would you like {}\'s age rolled for you?'.format(d['name']), 'y' )
+        ans = ynq( 'Would you like {}\'s AGE rolled for you?'.format(d['name']), 'y' )
         if ans is None:
             return False
         if not ans:
             age = getint( 'Enter {}\'s age in years? '.format(d['name']) )
             if not age:
                 continue
-            keep = ynq( 'got {} years of age, keep?'.format(age) )
+            keep = ynq( 'got {} years of age, keep?'.format(age), 'y' )
             if keep is None:
                 return False
             elif keep:
@@ -720,19 +730,38 @@ def create_character():
                     break
             if done:
                 break
-    Message( 'character is {} years old'.format( d['age'] ) )
+    Message( '{} is {} years old'.format( d['name'], d['age'] ) )
 
     # STARTING MONEY
-    ca = character['classes'][ d['class'] ]
+    if d['class'] in character['classes']:
+        starting_money = character['classes'][ d['class'] ]['starting_money']
+    else:
+        starting_money = '1d10 x 10'
     while True:
-        gp = dice.mult( ca['starting_money'] )
-        ans = ynq( '{} starts with "{} gp". Rolled {} gp, keep? '.format( d['class'], ca['starting_money'], gp ), 'y' )
+        done = False
+        ans = ynq( 'Would you like {}\'s STARTING MONEY rolled for you?'.format(d['name']), 'y' )
         if ans is None:
-            return
-        if ans:
-            d['money'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
-            break
-    Message( 'character got {} gp'.format( gp ) )
+            return False
+        if not ans:
+            gp = getint( 'How many gold pieces? ' )
+            if not gp:
+                continue
+            keep = ynq( 'got {} gp, keep?'.format(gp), 'y' )
+            if keep is None:
+                return False
+            elif keep:
+                d['age'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
+                break
+        else:
+            print( '{} starts with "{}" gp'.format( d['class'], starting_money ) )
+            gp = dice.mult( starting_money )
+            ans = ynq( 'Rolled {} gp, keep? '.format( gp ), 'y' )
+            if ans is None:
+                return
+            if ans:
+                d['money'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
+                break
+    Message( '{} got {} gp'.format( d['name'], gp ) )
 
 
     # WEAPON PROFICIENCIES
@@ -1007,7 +1036,7 @@ def edit_character():
         if not name:
             return
 
-        char = get_character_for_name( name )
+        char = char_for_name( name )
         if not char:
             print( '\n{} not found!'.format(name) )
             continue
