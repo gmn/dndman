@@ -83,6 +83,16 @@ Your Selection> """
 
 ##################################################################
 # METHODS & CLASSES
+def terminal_size():
+    import fcntl, termios, struct
+    h, w, hp, wp = struct.unpack(
+        'HHHH',
+        fcntl.ioctl(0, termios.TIOCGWINSZ,
+            struct.pack('HHHH', 0, 0, 0, 0)
+        )
+    )
+    return w, h
+
 def timestamp():
     return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
