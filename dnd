@@ -5,7 +5,6 @@ import os
 import time
 import sys
 import datetime
-from data.terminalsize import get_terminal_size
 
 ##################################################################
 # CONFIG, GLOBALS
@@ -84,6 +83,22 @@ Your Selection> """
 
 ##################################################################
 # METHODS & CLASSES
+
+def terminal_size():
+    def unix_termsize():
+        import fcntl, termios, struct
+        h, w, hp, wp = struct.unpack(
+            'HHHH',
+            fcntl.ioctl(0, termios.TIOCGWINSZ,
+                struct.pack('HHHH', 0, 0, 0, 0)
+            )
+        )
+        return h, w
+    if os.name == 'nt':
+        from data.terminalsize import get_terminal_size
+        return get_terminal_size()
+    else:
+        return unix_termsize()
 
 def timestamp():
     return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
@@ -478,8 +493,8 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         # prepare for paged print
         term_row_printing = 0
         index_into_dataset = 0
-        padding_rows = 5
-        term_height, _ = get_terminal_size()
+        padding_rows = 6
+        term_height, _ = terminal_size()
 
         while index_into_dataset <= len(options):
 
@@ -490,17 +505,22 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
             if term_row_printing >= ( term_height - padding_rows ) or index_into_dataset >= len(options):
                 term_row_printing = 0
 
+                if index_into_dataset < len(options) - 1:
+                    print('-------MORE-------')
+                else:
+                    print('')
+
                 # print the menu and prompt
                 if len(options) >= (term_height - padding_rows):
-                    print( ' P) show previous screen' )
+                    print( ' p) show previous screen' )
                 if exit:
-                    print( ' E) exit to previous menu' )
+                    print( ' e) exit to previous menu' )
                 if quit:
-                    print( ' Q) quit to the previous menu' )
+                    print( ' q) quit to the previous menu' )
                 if custom:
-                    print( ' C] enter custom type' )
+                    print( ' c) enter custom type' )
 
-                if index_into_dataset < len(options):
+                if index_into_dataset < len(options) - 1:
                     print( '*Enter) Next page' )
 
                 ans = input( prompt ).rstrip().lstrip()
@@ -616,7 +636,7 @@ def create_character():
 
     # RACE
     while True:
-        ans = SubMenu( list( character['races'].keys() ), "Select a RACE: ", custom=True, default='Human' )
+        ans = SubMenu( list( character['races'].keys() ), "Select a RACE: ", custom=True, exit=False, default='Human' )
         if ans is None:
             return False
         if ans:
@@ -630,7 +650,7 @@ def create_character():
 
     # SEX
     while True:
-        ans = SubMenu( ['Male', 'Female'], 'What SEX is "{}"?'.format(d['name']), custom=True, default='Male' )
+        ans = SubMenu( ['Male', 'Female'], 'What SEX is "{}"?'.format(d['name']), custom=True, exit=False, default='Male' )
         if ans is None:
             return False
         if ans:
@@ -644,7 +664,7 @@ def create_character():
 
     # ALIGNMENT
     while True:
-        ans = SubMenu( character['alignments'], 'What ALIGNMENT is "{}"? '.format(d['name']), custom=True, default='Neutral Good' )
+        ans = SubMenu( character['alignments'], 'What ALIGNMENT is "{}"? '.format(d['name']), custom=True, exit=False, default='Neutral Good' )
         if ans is None:
             return False
         if ans:
@@ -658,7 +678,7 @@ def create_character():
 
     # CLASS
     while True:
-        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'Select a CLASS', custom=True )
+        ans = SubMenu( sorted( list( character['classes'].keys() ) ), 'Select a CLASS', custom=True, exit=False )
         if ans is None:
             return False
         if ans:
@@ -857,8 +877,7 @@ def shop_at_the_store( char ):
 
         while True:
             player_money = '{} has {}'.format( char['name'], money_toString( char['money'] ) )
-            #item_name = SubMenu( sorted(equipment[etype].keys()), player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False )
-            item = SubMenu( [{ k: v } for k, v in equipment[etype].items()], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False, exit=False )
+            item = SubMenu( [{ k: v } for k, v in sorted(equipment[etype].items())], player_money+"\nShopkeeper has these for sale. Which would you like to purchase?", custom=False, exit=False )
             if item:
                 item_name = [k for k in item.keys()][0]
                 subitem = item[item_name]
@@ -1109,7 +1128,6 @@ if check_cmdline_args():
 
 op = ''
 while op != 'q' and op != 'Q':
-    print( str(get_terminal_size()) )
 
     op = input( main_menu_string )
 

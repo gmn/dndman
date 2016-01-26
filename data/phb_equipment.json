@@ -19,7 +19,7 @@
         "Studded" : { "cost" : "15 gp", "ac": 3, "weight": 20 }
     },
 
-    "Weapons" : {
+    "Arms" : {
         "Arrow, normal, single" : { "cost" : "2 sp" },
         "Arrow, normal, dozen" : { "cost" : "1 gp" },
         "Arrow, silver, single" : { "cost" : "1 gp" },
