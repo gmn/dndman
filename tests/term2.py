@@ -11,13 +11,12 @@ def terminal_size():
     )
     return h, w
 
+# TERM HEIGHT
 height, width = terminal_size()
 print( "terminal height: {}, width: {}".format( height, width ) )
 
-print_height = 0
-
+# CREATE DATASET
 dictionary = []
-# create long dataset
 with open("/usr/share/dict/words","r") as f:
     dictionary = f.read().split('\n')[random.randint(100,5000):]
 
@@ -30,6 +29,9 @@ def mapwords(l):
 
 dataset = list(map( mapwords, range(1,201) ))
 
+
+# PAGE DATASET
+print_height = 0
 index = 0
 while index < len(dataset):
     line = dataset[index]
@@ -45,3 +47,5 @@ while index < len(dataset):
     print( line )
     print_height = print_height + 1
     index = index + 1
+
+
