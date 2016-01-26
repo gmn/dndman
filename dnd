@@ -108,6 +108,8 @@ def open_logfile():
     log_fh = open( logfile_path, 'a' )
 
 def log( msg ):
+    if msg[-1] != '\n':
+        msg = '{}\n'.format(msg)
     log_fh.write( msg )
 
 def Message( s ):
