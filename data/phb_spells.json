@@ -306,15 +306,163 @@
         "Wall Of Stone" : {}
         },
         { "Anti-Magic Shell" : {},
-Bigby's Forceful Hand
-Control Weather
-Death Spell
-Disintegrate
-Enchant An Item
-Extension III
-Geas
-Glassee
+        "Bigby's Forceful Hand" : {},
+        "Control Weather" : {},
+        "Death Spell" : {},
+        "Disintegrate" : {},
+        "Enchant An Item" : {},
+        "Extension III" : {},
+        "Geas" : {},
+        "Glassee" : {},
+        "Globe of Invulnerability" : {},
+        "Guards And Wards" : {},
+        "Invisible Stalker" : {},
+        "Legend Lore" : {},
+        "Lower Water" : {},
+        "Monster Summoning IV" : {},
+        "Move Earth" : {},
+        "Otiluke's Freezing Sphere" : {},
+        "Part Water" : {},
+        "Project Image" : {},
+        "Reincarnation" : {},
+        "Repulsion" : {},
+        "Spiritwrack" : {},
+        "Stone To Flesh" : {},
+        "Tenser's Transformation" : {}
+        },
+        {
+        "Bigby's Grasping Hand" : {},
+        "Cacodemon" : {},
+        "Charm Plants" : {},
+        "Delayed Blast Fireball" : {},
+        "Drawmij's Instant Summons" : {},
+        "Duo-Dimension" : {},
+        "Limited Wish" : {},
+        "Mass Invisibility" : {},
+        "Monster Summoning V" : {},
+        "Mordenkainen's Sword" : {},
+        "Phase Door" : {},
+        "Power Ward, Stun" : {},
+        "Reverse Gravity" : {},
+        "Simulacrum" : {},
+        "Statue" : {},
+        "Vanish" : {}
+        },
+        {
+        "Antipathy/Sympathy" : {},
+        "Bigby's Clenched Fist" : {},
+        "Clone" : {},
+        "Glassteel" : {},
+        "Incendiary Cloud" : {},
+        "Mass Charm" : {},
+        "Maze" : {},
+        "Mind Blank" : {},
+        "Monster Summoning VI" : {},
+        "Otto's Irresistible Dance" : {},
+        "Permanency" : {},
+        "Polymorph Any Object" : {},
+        "Power Word, Blind" : {},
+        "Serten's Spell Immunity" : {},
+        "Symbol" : {},
+        "Trap The Soul" : {}
+        },
+        {
+        "Astral Spell" : {},
+        "Bigby's Crushing Hand" : {},
+        "Gate" : {},
+        "Imprisonment" : {},
+        "Meteor Swarm" : {},
+        "Monster Summoning VII" : {},
+        "Power Word, Kill" : {},
+        "Prismatic Sphere" : {},
+        "Shape Change" : {},
+        "Temporal Stasis" : {},
+        "Time Stop" : {},
+        "Wish" : {}
+        }
+    ],
 
+    "Illusionist" : [
+        {
+        "Audible Glamer" : {},
+        "Change Self" : {},
+        "Color Spray" : {},
+        "Dancing Lights" : {},
+        "Darkness" : {},
+        "Detect Illusion" : {},
+        "Detect Invisibility" : {},
+        "Gaze Reflection" : {},
+        "Hypnotism" : {},
+        "Light" : {},
+        "Phantasmal Force" : {},
+        "Wall Of Fog" : {}
+        },
+        {
+        "Blindness" : {},
+        "Blur" : {},
+        "Deafness" : {},
+        "Detect Magic" : {},
+        "Fog Cloud" : {},
+        "Hypnotic Pattern" : {},
+        "Improved Phantasmal Force" : {},
+        "Invisibility" : {},
+        "Magic Mouth" : {},
+        "Mirror Image" : {},
+        "Misdirection" : {},
+        "Ventriloquism" : {}
+        },
+        {
+        "Continual Darkness" : {},
+        "Continual Light" : {},
+        "Dispel Illusion" : {},
+        "Fear" : {},
+        "Hallucinatory Terrain" : {},
+        "Illusionary Script" : {},
+        "Invisibility 10' Radius" : {},
+        "Non-detection" : {},
+        "Paralyzation" : {},
+        "Rope Trick" : {},
+        "Spectral Force" : {},
+        "Suggestion" : {}
+        },
+        {
+        "Confusion" : {},
+        "Dispel Exhaustion" : {},
+        "Emotion" : {},
+        "Improved Invisibility" : {},
+        "Massmorph" : {},
+        "Minor Creation" : {},
+        "Phantasmal Killer" : {},
+        "Shadow Monsters" : {}
+        },
+        {
+        "Chaos" : {},
+        "Demi-Shadow Monsters" : {},
+        "Major Creation" : {},
+        "Maze" : {},
+        "Projected Image" : {},
+        "Shadow Door" : {},
+        "Shadow Magic" : {},
+        "Summon Shadow" : {}
+        },
+        {
+        "Conjure Animals" : {},
+        "Demi-Shadow Magic" : {},
+        "Mass Suggestion" : {},
+        "Permanent Illusion" : {},
+        "Programmed Illusion" : {},
+        "Shades" : {},
+        "True Sight" : {},
+        "Veil" : {}
+        },
+        {
+        "Alter Reality" : {},
+        "Astral Spell" : {},
+        "Prismatic Spray" : {},
+        "Prismatic Wall" : {},
+        "Vision" : {},
+        "First Level Magic-User Spells" : {}
+        }
     ]
 }
 
