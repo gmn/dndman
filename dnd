@@ -95,7 +95,7 @@ def terminal_size():
         )
         return h, w
     if os.name == 'nt':
-        from data.terminalsize import get_terminal_size
+        from lib.terminalsize import get_terminal_size
         return get_terminal_size()
     else:
         return unix_termsize()
