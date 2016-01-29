@@ -898,7 +898,7 @@ def create_character():
     # KNOWN LANGUAGES
     # - print how many the character can know based on INT score (PHB)
     # - present a list, with writein (custom) option
-
+    #
     # add racial language
     if d['race'] in character['races']:
         d['languages'].append( character['races'][ d['race'] ]['lang'] )
@@ -946,14 +946,34 @@ def create_character():
     # - present a list, with write in option,
     # - can add as many as they want
 
+
+    # helper
+    def text_single( prompt ):
+        while True:
+            bkg = input( prompt )
+            ans = ynq( 'You wrote: "{}". Keep?'.format(bkg), 'y' )
+            if ans is None:
+                return False
+            if ans:
+                return bkg
+                break
+
     # FAMILY BACKGROUND
     # - text entry
+    ans = text_single( 'Enter some family background about your character. (or leave blank)> ' )
+    if ans:
+        d['background'] = ans
 
     # NEXT OF KIN
     # - text entry
+    ans = text_single( 'Enter a next of kin, to whom will receive this character\'s worldly goods should they not return from an adventure. (or leave blank)> ' )
+    if ans:
+        d['next_of_kin'] = ans
 
     # HOME CITY
     # - text entry, default: "Greyhawk"
+    ans = text_single( 'What is their home city? (default: Greyhawk)> ' )
+    d['home_city'] = ans if ans else 'Greyhawk'
 
     #--------------------
     # note race modifiers
