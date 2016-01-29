@@ -35,6 +35,7 @@ default_character = {   'attribs':{},
                         'notes': '',
                         'adventure_log': [],
                         'SHD' : '1d6',
+                        'languages' : [ 'Common' ]
                     }
 
 # directories
@@ -67,6 +68,7 @@ defconfig = """{
 equipment = {}
 character = {}
 world = {}
+tables = {}
 
 main_menu_string = """First Edition Dungeons & Dragons Character Management Tool.
 Options are:
@@ -322,8 +324,19 @@ class RandomDiceRoller:
             raise
 
 
-class RollingChart:
-    pass
+class RandomTable:
+    def __init__( self, table=False ):
+        self.table = table
+        self.roller = RandomDiceRoller()
+    def roll( self, inp=False, sep=False ):
+        die_roll = inp if inp is not False else self.roller.roll( self.table['roll'] )
+        lrow = self.table['table'][-1]
+        for row in reversed(self.table['table']):
+            if row['roll'] < die_roll:
+                return (lrow['val'], die_roll) if sep else lrow['val']
+            lrow = row
+        return (lrow['val'], die_roll) if sep else lrow['val']
+
 
 def getint( text ):
     if text[-1] != ' ':
@@ -469,17 +482,17 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
     """ takes a list,
         X prints a header
         X prints an arbitary length list of options
-        - handles console window height run-overs
+        X handles console window height run-overs
         X adds on: e) exit menu, q) quit to main, c) custom input
         X print a 'prompt> '
         X gets input, checks for int or option, loops until exit-condition is met,
             returns a string
         - enums, so the caller knows if it is supposed to return
-        - handles different behaviors, so that all the character class
+        X handles different behaviors, so that all the character class
             eventualities are handled
         - takes 'random=1', so that prompt is skipped and random number
             is selected
-        - can be reused in CREATOR, EDITOR, AUTO-GENERATOR
+        X can be reused in CREATOR, EDITOR, AUTO-GENERATOR
     """
 
     prompt = prompt.rstrip()
@@ -753,7 +766,7 @@ def create_character():
     Message( '{} has {} hit points'.format( d['class'], d['hp'] ) )
 
     # AGE
-    # sub Dwarf for non-standard character race
+    # use Dwarf for non-standard character race
     while True:
         done = False
         ans = ynq( 'Would you like {}\'s AGE rolled for you?'.format(d['name']), 'y' )
@@ -823,25 +836,124 @@ def create_character():
 
 
     # WEAPON PROFICIENCIES
-    #   choose N from equipment list, or write in
+    # - print suggested # of weapon proficiencies as per PHB
+    # - choose from weapon list, or write in
 
     # KNOWN SPELLS
-    #   calculate/allot spells/choose from PHB
+    #   - print the 1e suggested # of spells known for class & level
+    #   - optionally write in 1 or more spells, ask: {name, level}
+    #   - select spells known from nested lists
+    #       - magic user | illusionist | druid | Cleric
+    #           - Level
+    #               - Spell
+    #   - randomly compute the known spells for class & level
 
     # SELECT DIETY
-    #   write-in for now
+    # - text entry
+    while True:
+        diety = input( 'What is your diety? (Default: None)> ' )
+        if not diety:
+            diety = '<unset>'
+        ans = ynq( 'Diety is "{}". Keep? '.format( diety ), 'y' )
+        if ans is None:
+            return False
+        if ans:
+            if diety != '<unset>':
+                char.data['diety'] = diety
+            break
 
-    # HEIGHT & WEIGHT
+    # HEIGHT
+    while True:
+        # FEET
+        feet = getint( 'What is their height?\n-Feet (default: 5\')> ' )
+        if feet is False:
+            feet = 5
+
+        # INCHES
+        inch = getint( '-Inches (default: 10")> ' )
+        if inch is False:
+            inch = 10
+
+        ans = ynq( 'Height is {}\' {}". Is this correct? '.format(feet,inch), 'y' )
+        if ans is None:
+            return False
+        if ans:
+            d['height'] = {'feet':feet, 'inches':inch}
+            break
+
+    # WEIGHT
+    while True:
+        # LBS
+        lbs = getint( 'What is their weight?\n-Lbs (default: 120)> ' )
+        if lbs is False:
+            lbs = 120
+        ans = ynq( 'Weight is {} lbs. Is this correct? '.format(lbs), 'y' )
+        if ans is None:
+            return False
+        if ans:
+            d['weight'] = lbs
+            break
+
 
     # KNOWN LANGUAGES
+    # - print how many the character can know based on INT score (PHB)
+    # - present a list, with writein (custom) option
+
+    # add racial language
+    if d['race'] in character['races']:
+        d['languages'].append( character['races'][ d['race'] ]['lang'] )
+
+    INT = d['attribs']['int']
+    if INT >= 1 and INT <= 18:
+        additional_languages = character['additional_languages'][ INT - 1 ]
+    else:
+        additional_languages = 0
+    if additional_languages > 0:
+        languages_table = RandomTable( tables[ "random_language" ] )
+        while True:
+            while True:
+                if not additional_languages:
+                    print( 'done adding languages' )
+                    break
+                print( 'Character with {} Intelligence gets {} additional languages'.format(INT, additional_languages) )
+                ans = ynq( 'Would you like the languages rolled for you? ', 'y' )
+                if ans is None:
+                    break
+                if ans:
+                    lang = languages_table.roll()
+                    print( 'Got random language: "{}"'.format(lang) )
+                else:
+                    lang = SubMenu( [l['val'] for l in sorted(tables['random_language']['table'])], 'Add a language' )
+                    if lang is None:
+                        return False
+                    if not lang:
+                        break
+                d['languages'].append( lang )
+                additional_languages = additional_languages - 1
+            s = ''
+            for l in d['languages']:
+                s = '{}"{}", '.format( s, l )
+            ans = ynq( 'Character has languages: {} keep? '.format(s) )
+            d['languages'] = list(set(d['languages']))
+            if ans is None:
+                return False
+            if ans:
+                break
+
 
     # NON-WEAPON-PROFICIENCIES
+    # - suggest how many per-level per-DMG
+    # - present a list, with write in option,
+    # - can add as many as they want
 
     # FAMILY BACKGROUND
+    # - text entry
 
     # NEXT OF KIN
+    # - text entry
 
     # HOME CITY
+    # - text entry, default: "Greyhawk"
 
     #--------------------
     # note race modifiers
@@ -984,6 +1096,12 @@ def load_data():
     global world
     world = json.load( fh )
     fh.close()
+
+    fh = open( './data/phb_tables.json', 'r' )
+    global tables
+    tables = json.load( fh )
+    fh.close()
+
 
 def list_characters():
     if len(roster) == 0:

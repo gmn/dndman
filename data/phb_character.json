@@ -1,12 +1,12 @@
 {
     "races" : {
-        "Human" : { "pl": "Human" },
-        "Elf" : { "pl": "Elven" },
-        "Dwarf" : { "pl": "Dwarven" },
-        "Halfling" : { "pl": "Halfling" },
-        "Gnome": { "pl": "Gnomish" },
-        "Half-Elf": { "pl": "Half-Elven" },
-        "Half-Orc": { "pl": "Half-Orcish" }
+        "Human" : { "pl": "Human", "lang": "Common" },
+        "Elf" : { "pl": "Elven", "lang": "Elvish" },
+        "Dwarf" : { "pl": "Dwarven", "lang": "Dwarvish" },
+        "Halfling" : { "pl": "Halfling", "lang": "Halfling" },
+        "Gnome": { "pl": "Gnomish", "lang": "Gnome" },
+        "Half-Elf": { "pl": "Half-Elven", "lang": "Elvish" },
+        "Half-Orc": { "pl": "Half-Orcish", "lang": "Orcish" }
     },
 
     "classes" : {
@@ -225,6 +225,7 @@
                                 "Thief" :       "Thief",
                                 "Assassin" :    "Thief",
                                 "Monk" :        "Thief"
-    }
+    },
 
+    "additional_languages" : [ 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 7 ]
 }
