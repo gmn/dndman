@@ -123,6 +123,8 @@ def open_logfile():
     log_fh = open( logfile_path, 'a' )
 
 def log( msg ):
+    if not msg or len(msg) < 2:
+        return
     if msg[-1] != '\n':
         msg = '{}\n'.format(msg)
     log_fh.write( msg )
@@ -133,7 +135,7 @@ def Message( s ):
     global messages
     messages.append( fmt )
     print( '\n -> {}\n'.format(s) )
-    log( json.dumps(fmt) )
+    log( json.dumps(fmt, sort_keys=True) )
     time.sleep( msg_time )
 
 def vowel( l ):
@@ -409,7 +411,7 @@ class CharacterSheet:
     def save( self ):
         # write to disk
         with open( datadir + '/characters/' + self.data['name'], 'w' ) as f:
-            f.write( json.dumps( self.data, indent = 2 ) )
+            f.write( json.dumps( self.data, indent = 2, sort_keys=True ) )
         # update roster
         global roster
         for c in roster:
@@ -487,7 +489,7 @@ def read_config():
 
 def write_config():
     with open( datadir + '/config', 'w' ) as f:
-        f.write( json.dumps( config, indent=2 ) )
+        f.write( json.dumps( config, indent=2, sort_keys=True ) )
 
 def load_roster():
     global roster

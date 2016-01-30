@@ -61,6 +61,7 @@
         "Quarrel (or Bolt), light, score" : { "cost" : "1 gp" },
         "Quarrel (or Bolt), heavy, single" : { "cost" : "2 sp" },
         "Quarrel (or Bolt), heavy, score" : { "cost" : "2 gp" },
+        "Quarter Staff, fighting" : { "cost" : "1 sp" },
         "Ranseur" : { "cost" : "4 gp" },
         "Scimitar" : { "cost" : "15 gp" },
         "Sling & Bullets, dozen" : { "cost" : "15 sp" },
