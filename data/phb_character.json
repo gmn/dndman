@@ -10,7 +10,7 @@
     },
 
     "classes" : {
-        "Cleric" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-3,"l":4},
+        "Cleric" : { "HD": "d8", "SHD": "1d8", "wp":{"inw":2,"npp":-3,"ppl":4},
             "starting_money": "3d6 x 10",
             "names": [ "Acolyte",
                 "Adept",
@@ -22,7 +22,7 @@
                 "Patriarch",
                 "High Priest" ]
         },
-        "Druid" : { "HD": "d8", "SHD": "1d8", "wp":{"in":2,"np":-4,"l":5},
+        "Druid" : { "HD": "d8", "SHD": "1d8", "wp":{"inw":2,"npp":-4,"ppl":5},
             "starting_money": "3d6 x 10",
             "names": [  "Aspirant",
                         "Ovate",
@@ -39,7 +39,7 @@
                         "Archdruid",
                         "The Great Druid" ]
         },
-        "Fighter" : { "HD": "d10", "SHD": "1d10", "wp":{"in":4,"np":-2,"l":3},
+        "Fighter" : { "HD": "d10", "SHD": "1d10", "wp":{"inw":4,"npp":-2,"ppl":3},
             "starting_money": "5d4 x 10",
             "names": [ "Veteran",
                         "Warrior",
@@ -51,7 +51,7 @@
                         "Superhero",
                         "Lord" ]
         },
-        "Paladin" : { "HD": "d10", "SHD": "1d10", "wp":{"in":3,"np":-2,"l":3},
+        "Paladin" : { "HD": "d10", "SHD": "1d10", "wp":{"inw":3,"npp":-2,"ppl":3},
             "starting_money": "5d4 x 10",
             "names": [ "Gallant",
                         "Keeper",
@@ -63,7 +63,7 @@
                         "Justiciar",
                         "Paladin" ]
         },
-        "Ranger" : { "HD": "d8", "SHD": "2d8", "wp":{"in":3,"np":-2,"l":3},
+        "Ranger" : { "HD": "d8", "SHD": "2d8", "wp":{"inw":3,"npp":-2,"ppl":3},
             "starting_money": "5d4 x 10",
             "names": [ "Runner",
                         "Strider",
@@ -75,7 +75,7 @@
                         "Ranger",
                         "Ranger Lord" ]
         },
-        "Magic User" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6},
+        "Magic User" : { "HD": "d4", "SHD": "1d4", "wp":{"inw":1,"npp":-5,"ppl":6},
             "starting_money": "2d4 x 10",
             "names": [ "Prestidigitator",
                         "Evoker",
@@ -96,7 +96,7 @@
                         "Wizard (17th Level)",
                         "Arch-Mage" ]
         },
-        "Illusionist" : { "HD": "d4", "SHD": "1d4", "wp":{"in":1,"np":-5,"l":6},
+        "Illusionist" : { "HD": "d4", "SHD": "1d4", "wp":{"inw":1,"npp":-5,"ppl":6},
             "starting_money": "2d4 x 10",
             "names": [ "Prestidigitator",
                         "Minor Trickster",
@@ -109,7 +109,7 @@
                         "Spellbinder",
                         "Illusionist" ]
         },
-        "Thief" : { "HD": "d6", "SHD": "1d6", "wp":{"in":2,"np":-3,"l":4},
+        "Thief" : { "HD": "d6", "SHD": "1d6", "wp":{"inw":2,"npp":-3,"ppl":4},
             "starting_money": "2d6 x 10",
             "names": [ "Rogue (Apprentice)",
                         "Footpad",
@@ -122,7 +122,7 @@
                         "Thief",
                         "Master Thief" ]
         },
-        "Assassin" : { "HD": "d6", "SHD": "1d6", "wp":{"in":3,"np":-2,"l":4},
+        "Assassin" : { "HD": "d6", "SHD": "1d6", "wp":{"inw":3,"npp":-2,"ppl":4},
             "starting_money": "2d6 x 10",
             "names": [ "Bravo (Apprentice)",
                         "Rutterkin",
@@ -140,7 +140,7 @@
                         "Guildmaster Assassin",
                         "Grandfather of Assassins" ]
         },
-        "Monk" : { "HD": "d4", "SHD": "2d4", "wp":{"in":1,"np":-3,"l":2},
+        "Monk" : { "HD": "d4", "SHD": "2d4", "wp":{"inw":1,"npp":-3,"ppl":2},
             "starting_money": "5d4 x 1",
             "names": [ "Novice",
                         "Initiate",

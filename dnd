@@ -35,7 +35,8 @@ default_character = {   'attribs':{},
                         'notes': '',
                         'adventure_log': [],
                         'SHD' : '1d6',
-                        'languages' : [ 'Common' ]
+                        'languages' : [ 'Common' ],
+                        'proficiencies' : []
                     }
 
 # directories
@@ -86,6 +87,18 @@ Your Selection> """
 ##################################################################
 # METHODS & CLASSES
 
+def arraystr(L):
+    s = ''
+    if not L:
+        return s
+    for l in L:
+        s = '{}"{}", '.format( s, l )
+    s = s.rstrip()
+    if s and s[-1] == ',':
+        s = s[:-1]
+    return s
+
+
 def terminal_size():
     def unix_termsize():
         import fcntl, termios, struct
@@ -126,6 +139,12 @@ def Message( s ):
 def vowel( l ):
     l = l.replace(' ','').lower()
     return l == 'a' or l == 'e' or l == 'i' or l == 'o' or l == 'u'
+
+def article(word, capital=True): # returns the word with the appropriate leading article
+    a = 'A' if capital else 'a'
+    if not word:
+        return a
+    return (a + 'n ' if vowel(word[0]) else a + ' ') + word
 
 def dprint( s ):
     if DEBUG is True:
@@ -494,7 +513,7 @@ def text_question( prompt, default='leave blank to skip' ):
             return inp
 
 
-def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False, default=False, exit=True, quit=True ):
+def SubMenu( options, header='', prompt='select>', random_noprompt=False, return_obj=False, custom=False, default=False, exit=True, quit=True, padding=False ):
     """ takes a list,
         X prints a header
         X prints an arbitary length list of options
@@ -517,6 +536,8 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
     if prompt[-1] != ' ':
         prompt = '{} '.format(prompt)
 
+    padding_rows = padding if padding else 6
+
     while True:
         if header:
             print( header )
@@ -524,7 +545,6 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         # prepare for paged print
         term_row_printing = 0
         index_into_dataset = 0
-        padding_rows = 6
         term_height, _ = terminal_size()
 
         while index_into_dataset <= len(options):
@@ -589,7 +609,7 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         elif ans == 'q':
             return None
         else:
-            if not ans:
+            if not ans and default:
                 return default
             try:
                 iv = int(ans)
@@ -667,7 +687,7 @@ def create_character():
 
     # RACE
     while True:
-        ans = SubMenu( list( character['races'].keys() ), "Select a RACE: ", custom=True, exit=False, default='Human' )
+        ans = SubMenu( sorted( character['races'].keys() ), "Select a RACE: ", custom=True, exit=False, default='Human' )
         if ans is None:
             return False
         if ans:
@@ -744,7 +764,7 @@ def create_character():
     # HIT_POINTS (roll hit dice)
     while True:
         done = False
-        print( 'A {} uses hit-dice "{}" with starting hit-die "{}"'.format( d['class'], d['HD'], d['SHD'] ) )
+        print( '{} uses hit-dice "{}" with starting hit-die "{}"'.format( article(d['class']), d['HD'], d['SHD'] ) )
         autoroll_hp = ynq( 'Would you like your HIT POINTS to be rolled for you?', 'y' )
         if autoroll_hp is None:
             return False
@@ -779,7 +799,7 @@ def create_character():
                     break
             if done:
                 break
-    Message( '{} has {} hit points'.format( d['class'], d['hp'] ) )
+    Message( 'The {} has {} hit points'.format( d['class'], d['hp'] ) )
 
     # AGE
     # use Dwarf for non-standard character race
@@ -808,7 +828,7 @@ def create_character():
             dieroll = character['starting-age'][race][className]
             while True:
                 years = dice.roll( dieroll )
-                ans = ynq( 'An {} rolls "{}" for {} years starting age, keep?'.format(d['race'], dieroll, years ), 'y' )
+                ans = ynq( '{} rolls "{}" for {} years starting age, keep?'.format( article(d['race']), dieroll, years ), 'y' )
                 if ans is None:
                     break # quit upwards to higher loop
                 if ans:
@@ -851,9 +871,25 @@ def create_character():
     Message( '{} got {} gp'.format( d['name'], gp ) )
 
 
-    # WEAPON PROFICIENCIES
-    # - print suggested # of weapon proficiencies as per PHB
-    # - choose from weapon list, or write in
+    #s WEAPON PROFICIENCIES
+    prof = character['classes'].get( d['class'], {'wp': {"inw":2,"npp":-3,"ppl":4}} )['wp']
+    total = prof['inw'] + d['level'] // prof['ppl']
+    print( 'Character of class {} gets {} WEAPON PROFICIENCIES at 1st level, and one more every {} levels (as per PHB p.37). Thus a {} level {} gets {} proficiencies total'.format( d['class'], prof['inw'], prof['ppl'], number_end(d['level']), d['class'], total ) )
+    time.sleep( sleep_time * 2 )
+
+    while True:
+        weapon = SubMenu( [k for k in sorted(equipment['Arms'].keys())], 'Select a Weapon-Proficiency (quit when done)', custom=True, exit=False, padding=11 )
+        if not weapon:
+            break
+        d['proficiencies'].append( weapon )
+        print( 'Adding {}'.format(weapon) )
+        time.sleep( sleep_time )
+
+    d['proficiencies'] = list(set(d['proficiencies']))
+    if d['proficiencies']:
+        Message( '{} is proficient in: {}'.format( d['name'], arraystr( d['proficiencies'] ) ) )
+    else:
+        Message( '{} has no weapon proficiencies'.format( d['name'] ) )
 
     # KNOWN SPELLS
     #   - print the 1e suggested # of spells known for class & level
@@ -922,24 +958,12 @@ def create_character():
     # KNOWN LANGUAGES
     # - print how many the character can know based on INT score (PHB)
     # - present a list, with writein (custom) option
-
-    def langstr(L=False):
-        s = ''
-        if L is False:
-            L = d['languages']
-        for l in L:
-            s = '{}"{}", '.format( s, l )
-        s = s.rstrip()
-        if s[-1] == ',':
-            s = s[:-1]
-        return s
-
     print( 'Determining KNOWN LANGUAGES' )
     if d['race'] in character['races']:
         xtra = character['races'][ d['race'] ]['lang']
         d['languages'].append( xtra )
     d['languages'] = list(set(d['languages']))
-    Message( "Character knows {} to start".format(langstr()) )
+    Message( "Character knows {} to start".format(arraystr(d['languages'])) )
 
     INT = d['attribs']['int']
     if INT >= 1 and INT <= 18:
@@ -966,7 +990,7 @@ def create_character():
                     langs = list(set(langs))
                     if len(langs) >= additional_languages:
                         break
-                ans = ynq( 'Got: {}, keep?'.format(langstr(langs)), 'y' )
+                ans = ynq( 'Got: {}, keep?'.format(arraystr(langs)), 'y' )
                 if ans is None:
                     break
                 if ans:
@@ -992,13 +1016,13 @@ def create_character():
                         print( 'Done adding languages')
                         time.sleep( sleep_time * 2 )
                         break
-                ans = ynq( 'Got: {}, keep?'.format(langstr(langs)), 'y' )
+                ans = ynq( 'Got: {}, keep?'.format(arraystr(langs)), 'y' )
                 if ans:
                     d['languages'].extend(langs)
                     d['languages'] = list(set(d['languages']))
                     break
 
-    Message( '{} knows: {}'.format(d['name'], langstr()) )
+    Message( '{} knows: {}'.format(d['name'], arraystr(d['languages'])) )
 
 
     # NON-WEAPON-PROFICIENCIES
@@ -1011,18 +1035,25 @@ def create_character():
     # - text entry
     ans = text_question( 'Enter some family background about your character' )
     if ans:
+        Message( 'Character\'s background: {}'.format(a) )
         d['background'] = ans
+    else:
+        Message( 'no background' )
 
     # NEXT OF KIN
     # - text entry
-    ans = text_question( 'Enter a next of kin for this character' )
+    ans = text_question( 'Next of kin?' )
     if ans:
+        Message( 'Next of kin: {}'.format(ans) )
         d['next_of_kin'] = ans
+    else:
+        Message( 'no next of kin' )
 
     # HOME CITY
     # - text entry, default: "Greyhawk"
     ans = text_question( 'What is their home city?', 'default: Greyhawk' )
     d['home_city'] = ans if ans else 'Greyhawk'
+    Message( 'Home city: {}'.format(d['home_city']) )
 
     #--------------------
     # note race modifiers
@@ -1228,7 +1259,7 @@ def edit_inventory( char ):
                     break
                 char['inventory'].append(item)
                 char.save()
-                Message( '"{}" gets {} "{}"'.format(char['name'], 'an' if vowel(item[0]) else 'a', item) )
+                Message( '"{}" gets {} "{}"'.format(char['name'], article(item,False), item) )
                 break
 
         elif ans.lower() == 'd':
