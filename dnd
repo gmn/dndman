@@ -904,7 +904,12 @@ def create_character():
 
     # STEPS
     # *determine if the class gets spells
-    spells = character['classes'].get( d['class'], {} )
+    spell_classes = character['classes'].get( d['class'], {} ).get( 'spells', {} )
+    for class_name, level_spells in spell_classes.items():
+        spells = level_spells[ d['level'] - 1 ]
+        print( 'At {} Level, {} gets:'.format( number_end(d['level']), article(d['class'],0) ) )
+        for i, num in enumerate( spells ):
+            print( ' - {} {} level {} spells'.format( num, number_end(i+1), class_name ) )
 
     # *if so, determine # known
     # *if mu, give "read magic" as 1st
