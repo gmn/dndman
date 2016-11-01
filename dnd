@@ -1066,9 +1066,9 @@ def create_character():
 
     # HOME CITY
     # - text entry, default: "Greyhawk"
-    ans = text_question( 'What is their home city?', 'default: Greyhawk' )
-    d['home_city'] = ans if ans else 'Greyhawk'
-    Message( 'Home city: {}'.format(d['home_city']) )
+    ans = text_question( 'What is their home town?', 'default: Greyhawk' )
+    d['home_town'] = ans if ans else 'Greyhawk'
+    Message( 'Home town: {}'.format(d['home_town']) )
 
     #--------------------
     # note race modifiers
