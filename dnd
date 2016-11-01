@@ -1219,11 +1219,13 @@ def load_data():
 
 
 def list_characters():
+    print()
     if len(roster) == 0:
         print( '\n  no characters\n' )
         time.sleep( sleep_time * 2 )
     for i, c in enumerate(roster):
         print( ' {}: {}'.format(i, c.toString()) )
+    print()
 
 def check_cmdline_args():
     args = sys.argv[1:]
