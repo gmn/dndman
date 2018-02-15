@@ -637,7 +637,7 @@ def create_character():
     while True:
         ans = input( "What is your character's NAME? " )
         if not ans:
-            print( "empty string invalid" )
+            print( "--can't be empty string--" )
             continue
         elif ans == 'q':
             return False
@@ -658,32 +658,27 @@ def create_character():
     while True:
         auto_roll = ynq( 'Would you like your ATTRIBUTES to be rolled for you?', 'y' )
         if auto_roll is None:
-            return
-        elif not auto_roll:
-            print( "Enter Attributes Manually:" )
-            for a in attribs_ordered:
-                while True:
-                    atr = getint( "-Enter {} ? ".format(a.upper()) )
-                    if not atr:
-                        print( "Bad value. Integer only." )
-                        continue
-                    attribs[a] = atr
-                    break
-            ans = ynq( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ), 'y' )
-            if ans is None:
-                return False
-            elif ans:
-                break
-        else:
+            return False
+
+        elif auto_roll:
             roll_method = config['rolls'][ config['default_attrib_roll_method'] ]
             print( 'Using dice method: "{}"'.format( roll_method ) )
             for a in attribs_ordered:
                 attribs[a] = dice.roll( roll_method )
             print( 'rolled: {}'.format( fmt_attrib( attribs ) ) )
-            ans = ynq( 'keep?', 'y' )
-            if ans is None:
-                return False
-            elif ans:
+            if yn( 'keep?', 'y' ):
+                break
+        else:
+            print( "Enter Attributes Manually:" )
+            for a in attribs_ordered:
+                while True:
+                    atr = getint( "-Enter {} ? ".format(a.upper()) )
+                    if not atr:
+                        print( "Bad value. Use integer only." )
+                        continue
+                    attribs[a] = atr
+                    break
+            if yn( 'entered: {}, keep? '.format( fmt_attrib( attribs ) ), 'y' ):
                 break
     Message( 'Character has attributes: {}'.format( fmt_attrib( attribs ) ) )
 
@@ -770,17 +765,7 @@ def create_character():
         autoroll_hp = ynq( 'Would you like your HIT POINTS to be rolled for you?', 'y' )
         if autoroll_hp is None:
             return False
-        if not autoroll_hp:
-            hp = getint( 'enter hitpoints> ' )
-            if not hp:
-                continue
-            ans = ynq( 'got: {}, keep?'.format(hp), 'y' )
-            if ans is None:
-                return False
-            elif ans:
-                d['hp'] = hp
-                break
-        else:
+        if autoroll_hp:
             while True:
                 hp = []
                 hp.extend( dice.roll( d['SHD'], separate=True ) )
@@ -792,14 +777,23 @@ def create_character():
                 for h in hp[:-1]:
                     print( str(h) + ' +', end=' ' )
                 print( '{} = {}'.format( str(hp[-1]), sum(hp) ) )
-                ans = ynq( 'keep?', 'y' )
-                if ans is None:
-                    break # here we exit to the higher loop
+                ans = yn( 'keep?', 'y' )
                 if ans:
                     d['hp'] = sum(hp)
                     done = True
                     break
+                else:
+                    break # n or q exit to higher loop
             if done:
+                break
+        else:
+            hp = getint( 'enter hitpoints > ' )
+            if not hp:
+                print( ' *not integer' )
+                continue
+            ans = yn( 'got: {}, keep?'.format(hp), 'y' )
+            if ans:
+                d['hp'] = hp
                 break
     Message( 'The {} has {} hit points'.format( d['class'], d['hp'] ) )
 

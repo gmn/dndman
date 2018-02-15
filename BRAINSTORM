@@ -1,4 +1,71 @@
 
+I see what to do:
+  - Make every attribute in a Character Sheet into its own small class.
+    This turns the create_character() routine into a series of class
+    calls. In fact, you could put the class objects in a list and
+    call every element of a list.
+  - Then each class has a random() call, so random generation does
+    the same thing only it calls random instead and fetches
+    an immediate result.
+  - also, can add c) random choice to char generation, which merely calls the random() method instead
+  - Melee algorithm takes a shortened representation of the full
+    character class. Just the:  Name, Attributes, HP, & Weapon
+    We pass these blobs to the melee class. Each ShortChar() obj
+    is a member of a group. There can be from 2-N groups.  At first
+    we ignore distance to calculate who goes after who.
+  - need method that generates ShortChar object from Character
+  - need algorithm to determine who engages whom. Therefore this
+    engagement determinator can be replaced/upgraded later. Distance added as factor, etc.
+  - follow the AD&D-1e algorithm pre Unearthed Arcana.
+
+-------------------------------------------------------
+
+ynq() - q will always exit sub-routine
+ynq() - should usually only be used at the top of the question currently being asked.
+        Internal logic to that question should use yn()
+
+* Attributes roll gets this logic correct
+
+-------------------------------------------------------
+
+LOGIC:
+    I just realized a maxim for UI design here:
+The ynq() questions must always function the same way. That is:
+the 'q' result must always exit the current sub-routine and shoot
+back to the parent sub-routine.  In the character creation flow
+this is not consistent.
+    - City is broken, in one part you answer "keep this?" with No,
+and it finishes keeping the result.
+
+These loops are very difficult. The code is easy, its getting the flow
+correct.  There must be better ways to abstract it out, such as using
+a macro-language, and generating the code-flow, so that you can write
+the exact logic flow through macros in plain-text, instead of Python.
+
+But then the question is: How big of a win is this? If it takes 150 hours
+just to get working, when you could've spent 15 hours to polish it in its
+current state?
+
+But the goals are: the more reuse we can get out of it the better. This
+thing is utterly dedicated to one system, one flow only. It's great
+practice to get started, but it ends with this 1e system. What about Goodman
+Games DCRPG, OSR systems, something else like that?  What about 0e?
+It would be more fun to do all of those. Ideally it would be macroized,
+so that a core library governed the flow, and read in macro-files to determine
+what to do, how to work. Then secondly, an additional app could run melee.
+This is the gold-standard. If I could write the 1e melee algorithm for 2-N
+participants, Holy Fuck, that would be awesome. It really would take
+this whole thing to a much higher level.  You could start a cottage industry
+online, just modifying and working on it every day. Maybe even make a living
+through Paypal/Patreon?...
+
+Another thing to consider: What about doing it in C/C++?  It woudl take
+me a couple weeks to flush out the boilerplate methods, but it would give you
+finer control over just about everything. Also, I can use ncurses which is
+just better.
+
+--------------------------------------------------------------------
+
 -------------------
  TODO (in order)
 -------------------
