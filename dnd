@@ -522,8 +522,8 @@ def SubMenu( options, header='', prompt='select>', random_noprompt=False, return
         X handles console window height run-overs
         X adds on: e) exit menu, q) quit to main, c) custom input
         X print a 'prompt> '
-        X gets input, checks for int or option, loops until exit-condition is met,
-            returns a string
+        X gets input, checks for int or option, loops until exit-condition is met, returns a string
+        - prints summary of currently selected items
         - enums, so the caller knows if it is supposed to return
         X handles different behaviors, so that all the character class
             eventualities are handled
@@ -841,42 +841,41 @@ def create_character():
     else:
         starting_money = '1d10 x 10'
     while True:
-        done = False
         ans = ynq( 'Would you like {}\'s STARTING MONEY rolled for you?'.format(d['name']), 'y' )
         if ans is None:
             return False
-        if not ans:
+        if ans:
+            print( '{} starts with "{}" gp'.format( d['class'], starting_money ) )
+            gp = dice.mult( starting_money )
+            ans = yn( 'Rolled {} gp, keep? '.format( gp ), 'y' )
+            if ans:
+                d['money'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
+                break
+        else:
             gp = getint( 'How many gold pieces? ' )
             if not gp:
                 continue
-            keep = ynq( 'got {} gp, keep?'.format(gp), 'y' )
-            if keep is None:
-                return False
-            elif keep:
-                d['age'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
-                break
-        else:
-            print( '{} starts with "{}" gp'.format( d['class'], starting_money ) )
-            gp = dice.mult( starting_money )
-            ans = ynq( 'Rolled {} gp, keep? '.format( gp ), 'y' )
-            if ans is None:
-                return
-            if ans:
+            keep = yn( 'got {} gp, keep?'.format(gp), 'y' )
+            if keep:
                 d['money'] = {'cp':0,'sp':0,'gp':gp,'ep':0,'pp':0}
                 break
     Message( '{} got {} gp'.format( d['name'], gp ) )
 
 
-    #s WEAPON PROFICIENCIES
+    # WEAPON PROFICIENCIES
     prof = character['classes'].get( d['class'], {'wp': {"inw":2,"npp":-3,"ppl":4}} )['wp']
     total = prof['inw'] + d['level'] // prof['ppl']
     print( 'Character of class {} gets {} WEAPON PROFICIENCIES at 1st level, and one more every {} levels (as per PHB p.37). Thus a {} level {} gets {} proficiencies total'.format( d['class'], prof['inw'], prof['ppl'], number_end(d['level']), d['class'], total ) )
     time.sleep( sleep_time * 2 )
 
+    msg_string = 'Select a Weapon-Proficiency (quit when done)'
     while True:
-        weapon = SubMenu( [k for k in sorted(equipment['Arms'].keys())], 'Select a Weapon-Proficiency (quit when done)', custom=True, exit=False, padding=11 )
+        weapon = SubMenu( [k for k in sorted(equipment['Arms'].keys())], msg_string , custom=True, exit=False, padding=11 )
         if not weapon:
             break
+        if len(msg_string) == 44:
+            msg_string = '{}\nGot so far: '.format(msg_string)
+        msg_string = '{} "{}",'.format(msg_string, weapon)
         d['proficiencies'].append( weapon )
         print( 'Adding {}'.format(weapon) )
         time.sleep( sleep_time )
