@@ -1,0 +1,9 @@
+
+/dnd
+
+/lib/...py          - [Generic] functions, methods, classes that probably used by any system
+                      The guts, plumbing, and logic to make it run.
+
+/data/1e/...json    - [system-specific] meta-data, tables, charts
+
+/logic/1e/...py     - [system-specific] code, functions, algorithms, classes
