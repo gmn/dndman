@@ -75,10 +75,10 @@ def generate_name():
 
     # Num V-C Sections, weighted-low
     R = randint(1,32)
-    if R <= 15:         # 15/32 (47%)
-        sections = 1
-    if R <= 24:         # 9/32  (28%)
+    if R <= 15:         # 14/32 (44%)   2 syllables
         sections = 2
+    elif R <= 24:       # 9/32  (31%)   1 sylable
+        sections = 1
     elif R <= 30:       # 6/32  (19%)
         sections = 3
     else:               # 2/32  (6%)
